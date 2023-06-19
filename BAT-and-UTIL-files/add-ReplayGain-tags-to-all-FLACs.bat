@@ -1,0 +1,20 @@
+@echo off 
+
+call randcolor
+if not exist *.flac (%COLOR_IMPORTANT_LESS% %+ echo * No flacs exist here. %+ goto :END)
+if     exist *.flac (goto :FlacExists_YES)
+                     goto :FlacExists_NO
+
+
+
+:FlacExists_YES
+%COLOR_RUN% %+ echo * Adding ReplayGain tags to flac files...
+for %%flac in (*.flac) (%COLOR_LESS_IMPORTANT% %+ echo      - %flac %+ metaflac --add-replay-gain "%flac")
+
+
+
+:FlacExists_NO
+:END
+color bright red on black
+
+

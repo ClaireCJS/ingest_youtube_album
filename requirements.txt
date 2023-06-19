@@ -1,0 +1,4 @@
+colorama==0.4.6
+eyed3==0.9.7
+prompt_toolkit==3.0.36
+fix_unicode_filenames

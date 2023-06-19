@@ -18,8 +18,6 @@ Step 2: Run this script!
 
 ## Why?
 
-ics files: 
-
 It will ask you who the original artist is, let you review some tags, it will tag the files using info from the youtube metadata, it will convert unicode to keep the tags compliant, it will strip unnecesary leading 0s off the filename, it will move the audio files into an "Artst\Year - Album" subfolder automatically. 
 
 And there will be rainbows.
@@ -27,11 +25,13 @@ And there will be rainbows.
 
 ## Installation: Python
 
-Just install the appropriate packages, and the script should be ready to go.
+Install the required packages:
 
 ```bash
 pip install -r requirements.txt
 ```
+
+And also get my fix_unicode_filenames project somewhere importable
 
 
 ## Contributing: Modification

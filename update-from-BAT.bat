@@ -6,7 +6,7 @@ REM     local GIT repo beore doing anything significant.  Or really, before doin
 
 
 rem CONFIGURATION:
-        SET MANIFEST_FILES=ingest_youtube_album.py download-youtube-album.bat
+        SET MANIFEST_FILES=ingest_youtube_album.py download-youtube-album.bat split-mp3-by-inputted-chapter-info.bat split-mp3-by-inputted-chapter-info-helper.py
 
         set SECONDARY_BAT_FILES=download-youtube-album.bat validate-in-path.bat validate-environment-variables.bat validate-environment-variable.bat white-noise.bat unimportant.bat print-message.bat randcolor.bat randfg.bat randbg.bat colors.bat colortool.bat settmpfile.bat important.bat error.bat fatalerror.bat fatal_error.bat car.bat nocar.bat errorlevel.bat print-if-debug.bat advice.bat warning.bat celebration.bat change-escape-character-to-tilde.bat change-escape-character-to-carrot.bat change-escape-character-to-normal.bat set-latestfilename.bat delete-largest-file.bat add-ReplayGain-tags.bat add-ReplayGain-tags-to-all-FLACs.bat add-ReplayGain-tags-to-all-MP3s.bat change-into-temp-folder.bat
 

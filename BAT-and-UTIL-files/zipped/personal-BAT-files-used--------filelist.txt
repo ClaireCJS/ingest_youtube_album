@@ -30,4 +30,4 @@
 2023-06-15  11:32          1,068   51%  validate-in-path.bat
 2023-06-15  02:57          2,380   60%  colors.bat
 2023-06-19  23:21         11,623   75%  validate-environment-variable.bat
-2023-06-20  14:31         12,796   73%  print-message.bat
+2023-06-27  21:58         13,340   74%  print-message.bat

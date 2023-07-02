@@ -91,18 +91,7 @@ def debug_char(description_new):
     for char in description_new: log_print(f'\t"{char}": {ord(char)}')   # Print ASCII value of each character
 
 
-#def fix_filename_case(filename):
-#    """
-#    In this update, I've added an additional line that converts any capitalized letter that immediately follows an apostrophe back to lower case.
-#
-#    The re.sub() function searches for a pattern in the text string and substitutes it with another string. The pattern \'[A-Z] matches any uppercase letter that immediately follows an apostrophe. The lambda m: m.group().lower() function converts the matched pattern to lower case.
-#
-#    Note: Please test this update thoroughly to make sure it does not unintentionally change other aspects of your filenames.
-#    """
-#    text = re.sub(r'(\[[^\]]*\]|\([^\)]*\)|\{[^\}]*\})', lambda m: m.group().lower(), filename)
-#    text = text.title()
-#    text = re.sub(r"\'[A-Z]",                            lambda m: m.group().lower(), text)
-#    return text
+
 
 def fix_filename_case(filename):
     """
@@ -124,20 +113,18 @@ def preprocess_filenames(directory):
             if temp_orig_artist and not orig_artist: orig_artist = temp_orig_artist
 
     if mp3_file_count == 1:
-        pass #don't rename files if there's just one
+        pass                #don't rename files if there's just one
     else:
         for filename in os.listdir(directory):
             new_filename = filename                                                                                                    #initial placeholder value
             if filename.endswith('.mp3'):
                 log_print(f'{Fore.YELLOW}{Style.BRIGHT}  * Pre-process: {Style.NORMAL}' + filename, end='')
 
-                # Match the filename pattern using a regular expression
-                match = re.match(r'(.*\d{3} )\d{1,3}-?(.*.mp3)', filename)
+                match = re.match(r'(.*\d{3} )\d{1,3}-?(.*.mp3)', filename)                                                             # Match the filename pattern using a regular expression
                 if match:
                     new_filename = match.group(1) + match.group(2)
 
-                # If the filename has changed, rename the file
-                if new_filename != filename:
+                if new_filename != filename:                                                                                           # If the filename has changed, rename the file
                     log_print(f'\n\t- {Fore.WHITE              }Old name: {Fore.LIGHTBLACK_EX}{    filename}')
                     log_print(  f'\t- {Fore.GREEN}{Style.BRIGHT}New name: {Style.NORMAL      }{new_filename}')
                     os.rename(os.path.join(directory, filename), os.path.join(directory,       new_filename))
@@ -157,7 +144,7 @@ def show_audio_files_in_rainbow(directory):
     if num_files: color_step = num_colors / num_files
     else:         color_step = 1
     for i, file in enumerate(mp3_files):
-        color_index = int(i * color_step)         #changed int to round and afraid of ArrayOutOfBound exceptions
+        color_index = int(i * color_step)                                                                    #changed int to round and afraid of ArrayOutOfBound exceptions
         if color_index >= len(color_list): color_index=len(color_list)-1
         color = color_list[color_index]
         log_print(f"{color}{file}")
@@ -170,51 +157,28 @@ def load_json_file(file):
         data = json.load(our_json)
     return data
 
-#def load_json_data_OLD_did_not_tolerate_more_than_one_json_file(our_json_file):
-#    if not os.path.isfile(our_json_file):
-#        # List all JSON files in the current directory
-#        json_files = [f for f in os.listdir('.') if os.path.isfile(f) and f.endswith('.json')]
-#        if len(json_files) == 1:
-#            our_json_file = json_files[0]
-#        elif len(json_files) > 1:
-#            print("Error: More than one JSON file found, please specify the file to be loaded.")
-#            sys.exit(1)
-#        else:
-#            print("Error: No JSON file found.")
-#            sys.exit(1)
-#
-#    data = load_json_file(our_json_file)  # Load the JSON file
-#    return data
+
 
 def load_json_data(our_json_file):
     if not os.path.isfile(our_json_file):
-        # List all JSON files in the current directory
-        json_files = [f for f in os.listdir('.') if os.path.isfile(f) and f.endswith('.json')]
+        json_files = [f for f in os.listdir('.') if os.path.isfile(f) and f.endswith('.json')]              # List all JSON files in the current directory
         if not json_files:
             raise FileNotFoundError(f"Error: No JSON file found. Looking for: {our_json_file}")
             #sys.exit(1)
 
-        # If multiple JSON files are found, load the most recently modified one - mismatch is still possible, but less likely, and not super consequential
-        if len(json_files) > 1:
+        if len(json_files) > 1:                                                                             # If multiple JSON files are found, load the most recently modified one - mismatch is still possible, but less likely, and not super consequential
             latest_file = max(json_files, key=os.path.getmtime)
             print(f"Multiple JSON files found. Loading the most recent file: {latest_file}")
             our_json_file = latest_file
         elif len(json_files) == 1:
             our_json_file = json_files[0]
 
-    data = load_json_file(our_json_file)  # Load the JSON file
+    data = load_json_file(our_json_file)                                                                    # Load the JSON file
     return data
 
 
 
 
-
-
-#def get_artist_from_filename(filename):
-#    match = re.match(r"(.*?)'s", filename)
-#    if match: orig_artist = match.group(1)
-#    else:     orig_artist = ""
-#    return orig_artist
 
 def get_artist_from_filename(filename):
     orig_artist = ""
@@ -249,7 +213,7 @@ def rename_tag_move_incoming_youtube_album(directory, our_json_file):
     album_name_filename = ""
     genre               = fix_and_edit_value("genre"                      , "Chiptunes"                  )
     orig_artist         = fix_and_edit_value("original artist"            , guessed_orig_artist          ,fix_default_value_for_filenames=True)
-    album_name          = strip_artist_from_album_or_filename(album_name  , orig_artist,num_mp3s=num_mp3s)               #remove "Metallica's " from "Metallica's Master Of Puppets"
+    album_name          = strip_artist_from_album_or_filename(album_name  , orig_artist,num_mp3s=num_mp3s)                                                                                               #remove "Metallica's " from "Metallica's Master Of Puppets"
     album_name          = fix_and_edit_value("album title in our tag"     , fix_filename_case(album_name),fix_default_value_for_filenames=True)
     artist              = fix_and_edit_value("artist name in our tag"     , fix_filename_case(  artist  ),fix_default_value_for_filenames=True)
     album_name_filename = fix_and_edit_value("album title in our filename", album_name                   ,fix_default_value_for_filenames=True, mode="file", prompt_only_if_unicode_was_changed=True)    #we still do album even if it's a single song, so don't bother checking of mp3_count>1
@@ -276,7 +240,7 @@ def rename_tag_move_incoming_youtube_album(directory, our_json_file):
         remove_leading_zeroes(our_new_folder)
         move_companion_files(directory, our_new_folder)
         log_print(f"\n{Fore.GREEN}{Style.NORMAL}* Successfully tagged downloaded album.")
-        log_print(  f"{Fore.GREEN}{Style.NORMAL}* Successfully moved downloaded album to {our_new_folder}.\n\n")
+        log_print(  f"{Fore.GREEN}{Style.NORMAL}* Successfully  moved downloaded album to: {our_new_folder}\n\n")
     if num_mp3s == 1:
         log_print(f"\n{Fore.GREEN}{Style.NORMAL}* Successfully tagged & processed song." +                "\n\n")
 
@@ -348,13 +312,13 @@ def process_files(directory,artist="",year="",album_name="",publisher="",genre="
 
         # split values from filename - a mess because it was founded on chatgpt code that wasn't great and just keeps getting fixed as new filenames break it
         already_processed = False
-        if re.match(r'^\d{2}_', file):                              # Processed file format: XX_Name
+        if re.match(r'^\d{2}_', file):                                                        # Processed file format: XX_Name
             already_processed = True
             parts = [album_name, file[3:]]
-        else:                                                       # Original file format: Album - XX Name
+        else:                                                                                 # Original file format: Album - XX Name
             already_processed = False
             parts = file.rsplit(' - ', 1)
-        if len(parts) != 2:                                         # got backed into a corner here, some of this part was poorly written by chatgpt
+        if len(parts) != 2:                                                                   # got backed into a corner here, some of this part was poorly written by chatgpt
             parts = ["", file]
         if DEBUG_FILENAME_SPLITTING: log_print(f"\n{Fore.YELLOW}{Style.BRIGHT}* parts(b12)==== {Fore.CYAN}{Style.NORMAL}{parts}")
         if len(parts) != 2:
@@ -362,13 +326,13 @@ def process_files(directory,artist="",year="",album_name="",publisher="",genre="
             time.sleep(5)
             continue
         if DEBUG_FILENAME_SPLITTING: log_print(f"\n{Fore.YELLOW}{Style.BRIGHT}* parts(c23)==== {Fore.CYAN}{Style.NORMAL}{parts}")
-        youtube_video_title_string = parts[0]                       # unused
-        if num_mp3s > 1: chapter_id_title = "0" + parts[1]                           # Adding back the "0"
-        else:            chapter_id_title = parts[1]                                 # Adding back the "0"
+        youtube_video_title_string = parts[0]                                                 # unused
+        if num_mp3s > 1: chapter_id_title = "0" + parts[1]                                    # Adding back the "0"
+        else:            chapter_id_title = parts[1]                                          # Adding back the "0"
         if DEBUG_VIEW_TAG_VALUES_BEFORE_INSERTION: log_print(f"\tchapter_id_title[55]={chapter_id_title},already_processed={already_processed}")
-                                                                #chapter_id_title[55]=Where is My Mind but with the SM64 Soundfont [ePL44jEEOCQ].mp3,already_processed=False
+                                                                                              #chapter_id_title[55]=Where is My Mind but with the SM64 Soundfont [ePL44jEEOCQ].mp3,already_processed=False
         chapter_num="0"
-        if not already_processed:                                        # Now, we split chapter_id_title into chapter_num, title and youtube_id
+        if not already_processed:                                                             # Now, we split chapter_id_title into chapter_num, title and youtube_id
             if num_mp3s == 1:
                 rest = chapter_id_title
                 if DEBUG_FILENAME_SPLITTING: log_print(f"\n{Fore.RED}{Back.BLUE}{Style.BRIGHT}* chap,rest[YY]={Fore.CYAN}{Back.BLACK}{Style.NORMAL}chapter_num={chapter_num},rest={rest}")
@@ -386,7 +350,7 @@ def process_files(directory,artist="",year="",album_name="",publisher="",genre="
         else:
             if "_" in chapter_id_title:
                 chapter_num, title = chapter_id_title.split("_")
-                youtube_id = "N/A"                                       # we could fetch this from the info.json file but we don't actually *use* the youtube_id value
+                youtube_id = "N/A"                                                            # we could fetch this from the info.json file but we don't actually *use* the youtube_id value
             else:
                 chapter_num = "1"
                 title = chapter_id_title
@@ -395,9 +359,11 @@ def process_files(directory,artist="",year="",album_name="",publisher="",genre="
         ##### INSERT TAGS :
         if DEBUG_VIEW_TAG_VALUES_BEFORE_INSERTION: log_print(f"\ttitle[xx]={title},year={year},#={chapter_num},youtube_video_title_string={youtube_video_title_string},chapter_id_title={chapter_id_title},youtube_id={youtube_id},orig_artist={orig_artist}")
 
-        log_print(f"{Fore.RED}{Style.BRIGHT}  ************ Updating Tags!!! (file={file}) ************{Fore.BLACK}{Style.NORMAL}")
+        #og_print(f"{Fore.RED}{Style.BRIGHT}  ************ Updating Tags!!! (file={file}) ************{Fore.BLACK}{Style.NORMAL}")
+        log_print(f"{Fore.CYAN}{Style.NORMAL}                   ...Updating Tags!{Fore.BLACK}{Style.NORMAL}")
         audiofile = eyed3.load(file)
         if DEBUG_TAGGING_CRASHES: log_print(f"{Fore.RED}{Style.BRIGHT}  * audiofile loaded * {Fore.BLACK}{Style.NORMAL}")
+
         if not audiofile.tag: audiofile.initTag()
         if DEBUG_TAGGING_CRASHES: log_print(f"{Fore.RED}{Style.BRIGHT}  * tag initialized * {Fore.BLACK}{Style.NORMAL}")
 
@@ -405,9 +371,11 @@ def process_files(directory,artist="",year="",album_name="",publisher="",genre="
         description_old_4print = description.replace('\r','\\r').replace('\n','\\n')
         description_new = sanitize_text(description)
         if DEBUG_COMMENT_NEWLINES: log_print(f"\t{Fore.RED}{Style.NORMAL}description_old_4print={description_old_4print}{Fore.YELLOW}"); debug_char(description_new)
+
         description_new = re.sub(  '\n', '\r\n', description)
         description_new_4print = description_new.replace(r'\r','\\r'  ).replace('\n','\\n')
         if DEBUG_COMMENT_NEWLINES: log_print(f"\t{Fore.YELLOW}{Style.NORMAL}description_new_4print={description_new_4print}{Fore.YELLOW}" + f"\t{Fore.YELLOW}{Style.NORMAL}description_new="  + f"{description_new}"  + f"{Fore.YELLOW}")
+
         if description_new: audiofile.tag.comments.set(description_new)
         if DEBUG_TAGGING_CRASHES: log_print(f"{Fore.RED}{Style.BRIGHT}  * comment ready * {Fore.BLACK}{Style.NORMAL}")
 
@@ -420,10 +388,10 @@ def process_files(directory,artist="",year="",album_name="",publisher="",genre="
         if chapter_num: audiofile.tag.track_num  = sanitize_text(chapter_num) #.decode('utf-8')
         if title:       audiofile.tag.title      = sanitize_text(title      ) #.decode('utf-8')
         if publisher:   audiofile.tag.publisher  = sanitize_text(publisher  ) #.decode('utf-8')
-        if num_mp3s > 0:                                                                        #set to 1 to not tag album in single downloads, but we decided to include album in single downloads -- much like how a single is titled after the song it is
+        if num_mp3s > 0:                                                                                        #set to 1 to not tag album in single downloads, but we decided to include album in single downloads -- much like how a single is titled after the song it is
             if album_name: audiofile.tag.album   = sanitize_text(album_name ) #.decode('utf-8')
         if DEBUG_TAGGING_CRASHES: log_print(f"{Fore.RED}{Style.BRIGHT}  * about to save * {Fore.BLACK}{Style.NORMAL}")
-        audiofile.tag.save(version=eyed3.id3.ID3_V2_3)                                          #v2.3 tags play well with others. 2.4 don't. 2.4 was incompatible with metamp3.exe, for one thing
+        audiofile.tag.save(version=eyed3.id3.ID3_V2_3)                                                          #v2.3 tags play well with others. 2.4 don't. 2.4 was incompatible with metamp3.exe, for one thing
         if DEBUG_TAGGING_CRASHES: log_print(f"{Fore.RED}{Style.BRIGHT}  * saved * {Fore.BLACK}{Style.NORMAL}")
 
 
@@ -434,7 +402,7 @@ def process_files(directory,artist="",year="",album_name="",publisher="",genre="
             new_name = f"{artist} - {title}"
             new_name = fix_unicode_filenames.convert_a_filename(new_name,silent=True)
             if DEBUG_FILE_RENAMING: log_print(f"\n{Fore.YELLOW}{Style.BRIGHT}* new_name[a11]= {Fore.CYAN}{Style.NORMAL}{new_name}")
-            if orig_artist:
+            if orig_artist is not artist:
                 new_name = f"{new_name} (by {orig_artist})"
                 #NO! new_name = strip_artist_from_album_or_filename(new_name,orig_artist)
             new_name = f"{new_name}.mp3"
@@ -447,20 +415,12 @@ def process_files(directory,artist="",year="",album_name="",publisher="",genre="
             base      = fix_filename_case(base)                          # Capitalize each word in filename, but not in extension
             ext       = ext.lower()
             new_file  = f"{base}{ext}"
-            new_path = os.path.join(our_new_folder, new_file)
-            log_print(f"{Fore.BLUE}{Style.BRIGHT}* Renaming and moving file to: {new_path}")
+            new_path  = os.path.join(our_new_folder, new_file)
+            log_print(f"{Fore.BLUE}{Style.BRIGHT}\t* Renaming and moving file to: {new_path}")
             shutil.move(os.path.join(directory, file), new_path)
 
 
 
-#def sanitize_text_before_changes_for_ministry_psalm69_greek_character_failure(text): [different parts only]
-#    if isinstance(text, bytes):
-#        try:
-#            text = text.decode('utf-8')                       # Try to decode as utf-8
-#        except UnicodeDecodeError:
-#            text = text.decode('utf-8', 'replace')            # If error, decode and replace invalid characters
-#    # Ensure that the text is always encoded as UTF-8
-#    text = text.encode('utf-8')
 
 
 def sanitize_text(text):
@@ -471,11 +431,11 @@ def sanitize_text(text):
         text = str(int)
     if isinstance(text, bytes):
         try:
-            text = text.decode('utf-8')                       # Try to decode as utf-8
+            text = text.decode('utf-8')                                             # Try to decode as utf-8
         except UnicodeDecodeError:
-            text = text.decode('utf-8', 'replace')            # If error, decode and replace invalid characters
+            text = text.decode('utf-8', 'replace')                                  # If error, decode and replace invalid characters
     # Ensure that the text is always encoded as UTF-8
-    text = text.encode('utf-8').decode('utf-8')               # Encode and immediately decode to ensure text is a string
+    text = text.encode('utf-8').decode('utf-8')                                     # Encode and immediately decode to ensure text is a string
     if DEBUG_SANITIZE_TEXT: log_print(f"{Fore.GREEN}Debug: Text after sanitizing: {text}")    # Debug print
     return text
 
@@ -516,7 +476,7 @@ def set_artist_tags(audiofile="", artist="", orig_artist="", filepath=""):      
                                                                                     # don't save the tag when we are done because we do that in our calling function
 
 def create_bat_file(our_new_folder):
-    log_print(f"\t{Fore.CYAN}* go-to-album.bat created")
+    log_print(f"\n{Fore.CYAN}{Style.BRIGHT}*** go-to-album.bat created{Style.NORMAL}")
     # Create a batch file that changes directory into our_new_folder, which will be used externally:
     with open('go-to-album.bat', 'w', encoding="utf-8") as bat_file: bat_file.write(f'cd "{our_new_folder}"\n') #this is basically our script's return value
     log_print("\n\n")
@@ -526,16 +486,18 @@ def create_bat_file(our_new_folder):
 def remove_leading_zeroes(directory):
     while True:
         files = [f for f in os.listdir(directory) if f.lower().endswith('.mp3')]
-        log_print(f"{Fore.RED}{Style.BRIGHT}* Checking for leading zeroes on every file in: {directory}...", end="")
+        log_print(f"{Fore.RED}{Style.BRIGHT}* Checking for leading zeroes on every filename in: {Style.NORMAL}{directory}...", end="")
         if files and all(f.startswith('0') for f in files):
-            log_print(f"\n{Fore.RED}{Style.BRIGHT}\t* Some files were found... {Fore.BLUE}{Style.NORMAL}[files={files}]{Style.NORMAL}{Fore.YELLOW}")
+            #og_print(f"\n{Fore.RED}{Style.BRIGHT}\t* Unnecessary leading filename zeroes were found... {Fore.BLUE}{Style.NORMAL}[files={files}]{Style.NORMAL}{Fore.YELLOW}")
+            log_print(f"\n{Fore.RED}{Style.BRIGHT}\t* Unnecessary leading filename zeroes were found... {Style.NORMAL}{Fore.YELLOW}")
             for file in files:
                 log_print(f'\t\t{Fore.RED}{Style.NORMAL}- Removing leading "0" from: {file}{Style.NORMAL}{Fore.YELLOW} ')
                 if file.startswith('0'):
                     new_name = file[1:]
                     os.rename(os.path.join(directory, file), os.path.join(directory, new_name))
         else:
-            log_print(f'\n\t\t{Fore.RED}{Style.NORMAL}- Removing leading "0" from: {Style.BRIGHT}{Fore.GREEN}NONE!!{Style.NORMAL}{Fore.YELLOW} ')
+            #og_print(f'\n\t\t{Fore.RED}{Style.NORMAL}- Removing leading "0" from: {Style.BRIGHT}{Fore.GREEN}NONE!!{Style.NORMAL}{Fore.YELLOW} ')
+            log_print(f'\n\t\t{Fore.RED}{Style.NORMAL}- {Style.BRIGHT}{Fore.GREEN}All unnecessary leading filename zeroes have been successfully removed{Style.NORMAL}{Fore.YELLOW} ')
             break
 
 
@@ -552,23 +514,6 @@ def move_companion_files(directory, the_new_folder):
 
 
 
-#def strip_artist_from_album_or_filename(album_name, artist_name):
-#    if album_name.startswith(f"{artist_name}'s"):                  # Check if the album name starts with the artist's name followed by 's
-#        album_name = album_name[len(f"{artist_name}'s"):]          # Remove the artist's name and 's from the album name
-#    album_name = album_name.strip()                                # Remove any leading or trailing spaces
-#    return album_name
-
-#def strip_artist_from_album_or_filename_OLD(album_or_song_or_file_name, artist_name, num_mp3s="1234567"):
-#    #NO! album_or_song_or_file_name = ""
-#    if num_mp3s == 1:
-#        match = re.match(rf"{artist_name} - (.*?) \[\w+\]$" , album_or_song_or_file_name)
-#        if match:
-#            album_or_song_or_file_name = match.group(1)                                             # Replace the album name with everything after "<artist_name> - "
-#    else:
-#        if  album_or_song_or_file_name.startswith(f"{artist_name}'s"):                              # Check if the album name starts with the artist's name followed by 's
-#            album_or_song_or_file_name = album_or_song_or_file_name[len(f"{artist_name}'s"):]       # Remove the artist's name and 's from the album name
-#    album_or_song_or_file_name         = album_or_song_or_file_name.strip()                         # Remove any leading or trailing spaces
-#    return album_or_song_or_file_name
 
 def strip_artist_from_album_or_filename(album_or_song_or_file_name, artist_name, num_mp3s="1234567"):
     if num_mp3s == 1:

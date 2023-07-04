@@ -31,3 +31,14 @@
 2023-07-03  14:44         11,627   75%  validate-environment-variable.bat
 2023-07-03  13:45             48   -4%  unimportant.bat
 2023-07-04  17:53         14,357   67%  download-youtube-album.bat
+2023-06-01  05:19             51   -1%  important_less.bat
+2023-05-17  17:46            376   39%  delete-zero-byte-files.bat
+2023-07-03  00:04            184   53%  set-largestfilename.bat
+2023-06-27  14:28         11,779   76%  set-colors.bat
+2023-07-04  17:20          2,038   68%  make-image-square.bat
+2023-07-04  17:17            290   35%  crop-center-square-of-image.bat
+2023-07-04  17:35            232   41%  openimage.bat
+2023-07-04  17:52            532   60%  get-image-dimensions.bat
+2023-06-14  14:58            123   10%  set-task.bat
+2023-06-09  11:42            781   52%  fix-unicode-filenames.bat
+2023-06-19  18:10          2,726   66%  askYN.bat

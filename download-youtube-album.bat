@@ -191,7 +191,8 @@ REM Tag and move the files with our assistant python script:
 
 
 REM Add replaygain tags
-        pause
+        call warning "About to add ReplayGain tags..."
+        REM pause
         :add_replaygain_tags
         pushd 
             REM ingest-youtube-album.py creates go-to-album.bat as a return value to change into the folder it created to moves the album into   
@@ -208,24 +209,35 @@ REM Add replaygain tags
         *del /q _ingest.log >nul                                    %+ REM the log is actually copied into our target folder but a copy remains here, which we do not want
 
 
+REM Allow us to manually adjust the filename 
+        call delete-zero-byte-files
+        echo. %+ echo. %+ echo. %+ echo. %+ echo. 
+        call set-latest-filename
+        call rn "%latest_file%"
+
+
 REM Change out of temp folder and move things back to where we started
         cd ..
         call validate-env-var TEMP_FOLDER WHERE_WE_STARTED
-        %COLOR_ADVICE%       %+ echo * Current folder = %_CWD
-        %COLOR_WARNING%      %+ echos * About to move everything out of our TEMP_FOLDER``
-        %COLOR_WARNING_SOFT% %+ echos  (%TEMP_FOLDER) ``
-        %COLOR_NORMAL%       %+ echo. 
-        %COLOR_NORMAL%       %+ echos   ``
-        %COLOR_WARNING%      %+ echos and back to: %WHERE_WE_STARTED%
-        %COLOR_NORMAL%       %+ echo.
-                                pause
-        %COLOR_SUCCESS%      %+ mv /ds "%TEMP_FOLDER%" .
+        echo. %+ echo. %+ echo. 
+        %COLOR_IMPORTANT_LESS% %+ echo * Current folder = %_CWD %+ echo. 
+        %COLOR_WARNING%        %+ echos * About to move everything out of our TEMP_FOLDER``
+        %COLOR_WARNING_SOFT%   %+ echos  (%TEMP_FOLDER) ``
+        %COLOR_NORMAL%         %+ echo. 
+        %COLOR_NORMAL%         %+ echos   ``
+        %COLOR_WARNING%        %+ echos and back to: %WHERE_WE_STARTED%
+        %COLOR_NORMAL%         %+ echo.
+                                  pause
+        %COLOR_SUCCESS%        %+ mv /ds "%TEMP_FOLDER%" .
 
 
 :END
+        echo. %+ echo. %+ echo. %+ echo. %+ 
+        dir
+        echo. %+ echo. %+ echo. %+ 
 
-call celebration "Youtube album download complete!!!!!"
-REM  celebration.bat->print-message.bat does titles automatically now so we don't need to do this anymore: title Completed:  Youtube album download
+        call celebration "Youtube album download complete!!!!!"
+        REM  celebration.bat->print-message.bat does titles automatically now so we don't need to do this anymore: title Completed:  Youtube album download
 
 
 

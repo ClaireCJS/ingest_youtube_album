@@ -105,12 +105,12 @@ def preprocess_filenames(directory):
     log_print(f'{Fore.RED}{Style.BRIGHT}*** Pre-processing filenames...{Style.NORMAL}')
 
     mp3_file_count = 0
-    orig_artist = ""
+    guessed_orig_artist = ""
     for filename in os.listdir(directory):
         if filename.endswith('.mp3'):
             mp3_file_count += 1
             temp_orig_artist = get_artist_from_filename(filename)
-            if temp_orig_artist and not orig_artist: orig_artist = temp_orig_artist
+            if temp_orig_artist and not guessed_orig_artist: guessed_orig_artist = temp_orig_artist
 
     if mp3_file_count == 1:
         pass                #don't rename files if there's just one
@@ -131,7 +131,7 @@ def preprocess_filenames(directory):
                 else:
                     log_print(f'{Fore.GREEN}...Name unchanged.')
 
-    return mp3_file_count, orig_artist
+    return mp3_file_count, guessed_orig_artist
 
 
 def show_audio_files_in_rainbow(directory):
@@ -312,12 +312,14 @@ def process_files(directory,artist="",year="",album_name="",publisher="",genre="
 
         # split values from filename - a mess because it was founded on chatgpt code that wasn't great and just keeps getting fixed as new filenames break it
         already_processed = False
-        if re.match(r'^\d{2}_', file):                                                        # Processed file format: XX_Name
+        if re.match(r'^\d+_', file):                                                          # Processed file format: XX_Name
             already_processed = True
-            parts = [album_name, file[3:]]
+            #parts = [album_name, file[3:]]
+            parts = file.rsplit( '_' , 1)
         else:                                                                                 # Original file format: Album - XX Name
             already_processed = False
             parts = file.rsplit(' - ', 1)
+
         if len(parts) != 2:                                                                   # got backed into a corner here, some of this part was poorly written by chatgpt
             parts = ["", file]
         if DEBUG_FILENAME_SPLITTING: log_print(f"\n{Fore.YELLOW}{Style.BRIGHT}* parts(b12)==== {Fore.CYAN}{Style.NORMAL}{parts}")
@@ -326,12 +328,13 @@ def process_files(directory,artist="",year="",album_name="",publisher="",genre="
             time.sleep(5)
             continue
         if DEBUG_FILENAME_SPLITTING: log_print(f"\n{Fore.YELLOW}{Style.BRIGHT}* parts(c23)==== {Fore.CYAN}{Style.NORMAL}{parts}")
+
         youtube_video_title_string = parts[0]                                                 # unused
-        if num_mp3s > 1: chapter_id_title = "0" + parts[1]                                    # Adding back the "0"
-        else:            chapter_id_title = parts[1]                                          # Adding back the "0"
-        if DEBUG_VIEW_TAG_VALUES_BEFORE_INSERTION: log_print(f"\tchapter_id_title[55]={chapter_id_title},already_processed={already_processed}")
-                                                                                              #chapter_id_title[55]=Where is My Mind but with the SM64 Soundfont [ePL44jEEOCQ].mp3,already_processed=False
-        chapter_num="0"
+        #f num_mp3s > 1: chapter_id_title = "0" + parts[1]                                    # Adding back the "0"
+        #lse:            chapter_id_title =       parts[1]                                    # ...(or not)
+        chapter_id_title = parts[1]
+        if DEBUG_VIEW_TAG_VALUES_BEFORE_INSERTION: log_print(f"\tchapter_id_title[55]={chapter_id_title},already_processed={already_processed}")                                                                                              #chapter_id_title[55]=Where is My Mind but with the SM64 Soundfont [ePL44jEEOCQ].mp3,already_processed=False
+        chapter_num="1"
         if not already_processed:                                                             # Now, we split chapter_id_title into chapter_num, title and youtube_id
             if num_mp3s == 1:
                 rest = chapter_id_title
@@ -339,7 +342,7 @@ def process_files(directory,artist="",year="",album_name="",publisher="",genre="
                 #title, youtube_id = rest.rsplit(" [", 1)                                     #* chap,rest[YY]=chapter_num=Where,rest=is My Mind but with the SM64 Soundfont [ePL44jEEOCQ].mp3
                 #youtube_id  = youtube_id.rstrip(']')
             else:
-                chapter_num, rest = chapter_id_title.split(" ", 1)
+                if " " in chapter_id_title: chapter_num, rest = chapter_id_title.split(" ", 1)
                 if DEBUG_FILENAME_SPLITTING: log_print(f"\n{Fore.YELLOW}{Style.BRIGHT}* chap,rest[YY]= {Fore.CYAN}{Style.NORMAL}chapter_num={chapter_num},rest={rest}")
             if "[" in rest and "]" in rest:
                 title, youtube_id = rest.rsplit(" [", 1)
@@ -347,14 +350,11 @@ def process_files(directory,artist="",year="",album_name="",publisher="",genre="
             else:
                 title = rest
                 youtube_id = ""
-        else:
-            if "_" in chapter_id_title:
-                chapter_num, title = chapter_id_title.split("_")
-                youtube_id = "N/A"                                                            # we could fetch this from the info.json file but we don't actually *use* the youtube_id value
-            else:
-                chapter_num = "1"
-                title = chapter_id_title
-        if num_mp3s == 1: chapter_num = "1"
+        if num_mp3s == 1:     chapter_num = "1"
+        if already_processed: chapter_num, title = parts[0], parts[1]
+
+
+        print(f"Chapter #{chapter_num}:'{chapter_id_title}' [already_processed={already_processed}]")
 
         ##### INSERT TAGS :
         if DEBUG_VIEW_TAG_VALUES_BEFORE_INSERTION: log_print(f"\ttitle[xx]={title},year={year},#={chapter_num},youtube_video_title_string={youtube_video_title_string},chapter_id_title={chapter_id_title},youtube_id={youtube_id},orig_artist={orig_artist}")
@@ -386,6 +386,7 @@ def process_files(directory,artist="",year="",album_name="",publisher="",genre="
         if artist:      audiofile.tag.artist     = sanitize_text(artist     ) #.decode('utf-8')
         if year:        audiofile.tag.album_date = sanitize_text(year       ) #.decode('utf-8')
         if chapter_num: audiofile.tag.track_num  = sanitize_text(chapter_num) #.decode('utf-8')
+        #todo remove this comment print(f"about to sanitize title {title}!")
         if title:       audiofile.tag.title      = sanitize_text(title      ) #.decode('utf-8')
         if publisher:   audiofile.tag.publisher  = sanitize_text(publisher  ) #.decode('utf-8')
         if num_mp3s > 0:                                                                                        #set to 1 to not tag album in single downloads, but we decided to include album in single downloads -- much like how a single is titled after the song it is
@@ -410,10 +411,11 @@ def process_files(directory,artist="",year="",album_name="",publisher="",genre="
             log_print(f"{Fore.CYAN}{Style.BRIGHT}             To: {Fore.BLUE}{Style.BRIGHT}{new_name}")
             rename_with_companion_rename(file, new_name, directory=directory)
         else:
-            new_file  = f"{chapter_num}_{title}.mp3"
+            new_file  = f"{chapter_num}_{title}"
             base, ext = os.path.splitext(new_file)                       # Split the filename and extension
             base      = fix_filename_case(base)                          # Capitalize each word in filename, but not in extension
             ext       = ext.lower()
+            if not ext: ext = ".mp3"
             new_file  = f"{base}{ext}"
             new_path  = os.path.join(our_new_folder, new_file)
             log_print(f"{Fore.BLUE}{Style.BRIGHT}\t* Renaming and moving file to: {new_path}")

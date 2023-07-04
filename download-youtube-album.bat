@@ -20,7 +20,9 @@ REM DEBUGGY stuff
 
 REM check parameters & environment
         if "%URL%" eq "" (call error "Need URL!" %+ goto :END)
-        call validate-in-path metamp3 metaflac yt-dlp
+        call validate-in-path               ingest_youtube_album.py delete-zero-byte-files important important_less errorlevel delete-largest-file warning error print-if-debug set-task metamp3 metaflac yt-dlp set-latest-filename openimage get-image-dimensions askyn crop-center-square-of-image make-image-square celebration change-into-temp-folder
+        call validate-environment-variables ANSI_BRIGHT_CYAN faint_on faint_off italics_on italics_off underline_on underline_off filemask_image %+ REM most of these are set by set-colors.bat:
+
 
 REM Extensions that we may be downloading:
         set EXTENSIONS_WE_ARE_POSSIBLY_DOWNLOADING=*.opus;*.webm;*.mp3;*.flac
@@ -187,7 +189,7 @@ REM Tag and move the files with our assistant python script:
         :befor_ingest
         :before_ingest
         REM tag our files, move them into a properly-named folder, fix their filenames
-            ingest_youtube_album.py                                     
+            ingest_youtube_album.py
             call errorlevel "youtube ingest failed in folder %_CWD [called by %0]"
             if %redo eq 1 goto :ingest
         :after_ingest
@@ -243,14 +245,24 @@ REM                 \-- it may need resized  in order to become square (720x720 
         REM get image name
             call   set-latest-filename %filemask_image%
             set image=%latest_filename%
+
+        REM display image
             call openimage "%image%"
-
+        REM prompt/correct image
+            set action_taken=
             set image_changed=0
-            call askyn "Does this need the center square cropped out?" no
-            if %do_it eq 1 (set image_changed=1 %+ call crop-center-square-of-image "%image%")
+            set         Q1="Does this need the center square cropped out?"
+            set         Q2="Does this need to be reshaped to square? (i.e. it is currently very obviously in the wrong aspect ratio)" 
+            call askyn %Q1% no %+ if %do_it   eq 1 (set do_it_1=1)
+            call askyn %Q2% no %+ if %do_it   eq 1 (set do_it_2=1)
+            if                       %do_it_1 eq 1 (set image_changed=1 %+ set action_taken="cropped" %+ call crop-center-square-of-image "%image%")
+            if                       %do_it_2 eq 1 (set image_changed=1 %+ set action_taken="resized" %+ call make-image-square           "%image%")
 
-            call askyn "Does this need to be reshaped to square? (i.e. it is currently very obviously in the wrong aspect ratio)" no
-            if %do_it eq 1 (set image_changed=1 %+ call make-image-square "%image%")
+        REM report new situation
+            if %image_changed eq 1 (
+                call get-image-dimensions "%image%"
+                echo %ANSI_BRIGHT_CYAN%*** Image %faint_on%%image%%faint_off% has been %italics_on%%action_taken%%italics_off% to %underline_on%%dimensions%%underline_off%
+            )
 
 
 

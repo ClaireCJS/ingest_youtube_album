@@ -27,18 +27,21 @@ REM Extensions that we may be downloading:
 
 
 REM secret command line options
-        if "%1" eq "already"                       (goto :Already_Downloaded)
-        if "%1" eq "replaygain"                    (goto :after_ingest      )
-        if "%1" eq "after_ingest"                  (goto :after_ingest      )
-        if "%1" eq "after"  .and. "%2" eq "ingest" (goto :after_ingest      )
-        if "%1" eq "ingest"                        (goto :befor_ingest      )
-        if "%1" eq "befor_ingest"                  (goto :befor_ingest      )
-        if "%1" eq "before_ingest"                 (goto :befor_ingest      )
-        if "%1" eq "before" .and. "%2" eq "ingest" (goto :befor_ingest      )
-        if "%1" eq "rename"                        (goto :rename_files      )
-        if "%1" eq "rename_files"                  (goto :rename_files      )
-        if "%1" eq "rename" .and. "%2" eq "files"  (goto :rename_files      )
-       :if "%1" != ""                              (goto :%1                )                     %+ REM goto a specific label
+        if "%1" eq "already"                          (goto :Already_Downloaded)
+        if "%1" eq        "ingest"                    (goto :befor_ingest      )
+        if "%1" eq  "befor_ingest"                    (goto :befor_ingest      )
+        if "%1" eq "before_ingest"                    (goto :befor_ingest      )
+        if "%1" eq "before"   .and. "%2" eq "ingest"  (goto :befor_ingest      )
+        if "%1" eq "after"    .and. "%2" eq "ingest"  (goto :after_ingest      )
+        if "%1" eq "after_ingest"                     (goto :after_ingest      )
+        if "%1" eq "replaygain"                       (goto :after_ingest      )
+        if "%1" eq "rename"                           (goto :rename_files      )
+        if "%1" eq "rename_files"                     (goto :rename_files      )
+        if "%1" eq "rename"   .and. "%2" eq   "files" (goto :rename_files      )
+        if "%1" eq "fix_image" .or. "%1" eq "fix_img" (goto :fix_image         )
+        if "%1" eq  "fiximage" .or. "%1" eq  "fiximg" (goto :fix_image         )
+        if "%1" eq     "image" .or. "%1" eq     "img" (goto :fix_image         )
+       :if "%1" != ""                                 (goto :%1                )                     %+ REM goto a specific label
 
 REM Ask where to place our downloads...
         pushd 
@@ -216,6 +219,8 @@ REM Allow us to manually adjust the filename
         call rn "%latest_file%"
 
 
+
+
 REM Change out of temp folder and move things back to where we started
         cd ..
         call validate-env-var TEMP_FOLDER WHERE_WE_STARTED
@@ -231,13 +236,30 @@ REM Change out of temp folder and move things back to where we started
         %COLOR_SUCCESS%        %+ mv /ds "%TEMP_FOLDER%" .
 
 
-:END
-        echo. %+ echo. %+ echo. %+ echo. %+ 
-        dir
-        echo. %+ echo. %+ echo. %+ 
+REM Fix cover image -
+REM                 \-- it may need cropping of just-the-center-square (720x720 square image  centered across a 1280x720 canvas with black sidebars)
+REM                 \-- it may need resized  in order to become square (720x720 square image stretched across a 1280x720 canvas)
+        :fix_image
+        REM get image name
+            call   set-latest-filename %filemask_image%
+            set image=%latest_filename%
+            call openimage "%image%"
 
+            set image_changed=0
+            call askyn "Does this need the center square cropped out?" no
+            if %do_it eq 1 (set image_changed=1 %+ call crop-center-square-of-image "%image%")
+
+            call askyn "Does this need to be reshaped to square? (i.e. it is currently very obviously in the wrong aspect ratio)" no
+            if %do_it eq 1 (set image_changed=1 %+ call make-image-square "%image%")
+
+
+
+
+:END
+        echo. %+ echo. %+ echo. 
         call celebration "Youtube album download complete!!!!!"
         REM  celebration.bat->print-message.bat does titles automatically now so we don't need to do this anymore: title Completed:  Youtube album download
 
+        dir
 
 

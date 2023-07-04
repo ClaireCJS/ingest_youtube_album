@@ -11,13 +11,14 @@
 2023-06-10  18:35             45   -4%  change-into-temp-folder.bat
 2023-06-15  02:57          2,380   60%  colors.bat
 2023-06-09  21:30            353   39%  ColorTool.bat
+2023-06-10  18:35            710   50%  create-and-change-into-temp-folder.bat
 2023-07-04  17:17            290   35%  crop-center-square-of-image.bat
 2023-05-23  19:07            638   52%  delete-largest-file.bat
 2023-05-17  17:46            376   39%  delete-zero-byte-files.bat
 2023-07-04  17:53         14,357   67%  download-youtube-album.bat
 2023-05-29  16:16             42   -4%  error.bat
 2023-06-14  13:08          8,401   73%  errorlevel.bat
-2023-06-04  20:28            274   41%  fatalerror.bat
+2023-07-04  18:45             58    7%  fatalerror.bat
 2023-06-04  20:28             19  -10%  fatal_error.bat
 2023-06-09  11:42            781   52%  fix-unicode-filenames.bat
 2023-07-04  17:52            532   60%  get-image-dimensions.bat

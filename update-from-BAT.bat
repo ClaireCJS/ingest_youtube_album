@@ -14,7 +14,7 @@ rem CONFIGURATION:
         set SECONDARY_UTIL_FILES=metamp3.exe metaflac.exe yt-dlp.exe 
         
 
-call update-from-BAT-via-manifest.bat
+call update-from-BAT-via-manifest.bat %*
 
 
 

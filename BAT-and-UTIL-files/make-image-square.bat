@@ -32,27 +32,32 @@ REM is it square?
         if %height eq %width (set image_is_square=1 %+ goto :no_resize_needed)
 
 REM If we are here, it is not square and needs fixing:
-        if %crop eq 1 (
-            if "%smaller_is%" eq "width"  (set SQUARE_DIMEN=%width% %+ call print-if-debug "crop to %width% square")
-            if "%smaller_is%" eq "height" (set SQUARE_DIMEN=%height %+ call print-if-debug "crop to %height square")
-            magick.exe convert "%IMAGE%" -gravity center -crop %SQUARE_DIMEN%x%SQUARE_DIMEN%+0+0 +repage "%IMAGE%"
-            set image_is_changed=1
-            set action_taken=cropped 
-        )
-        if %expand eq 1 (
-            if "%smaller_is%" eq "width"  (set SQUARE_DIMEN=%height %+ call print-if-debug "expand to %height square")
-            if "%smaller_is%" eq "height" (set SQUARE_DIMEN=%width% %+ call print-if-debug "expand to %width% square")
-            magick.exe convert "%IMAGE%" -gravity center -background black -extent %SQUARE_DIMEN%x%SQUARE_DIMEN% "%IMAGE%"
-            set image_is_changed=1
-            set action_taken=expanded
-        )
-        if %crop ne 1 .and. %expand ne 1 (
-            if "%smaller_is%" eq "width"  (set SQUARE_DIMEN=%height %+ call print-if-debug "resize  width of %width% to be %height")
-            if "%smaller_is%" eq "height" (set SQUARE_DIMEN=%width% %+ call print-if-debug "resize height of %height to be %width%")
-            magick.exe convert "%IMAGE%" -resize %SQUARE_DIMEN%x%SQUARE_DIMEN%! -gravity center -crop %SQUARE_DIMEN%x%SQUARE_DIMEN%+0+0 +repage "%IMAGE%"
-            set image_is_changed=1
-            set action_taken=squished/resized
-        ) 
+        REM ** crop **
+                if %crop eq 1 (
+                    if "%smaller_is%" eq "width"  (set SQUARE_DIMEN=%width% %+ call print-if-debug "crop to %width% square")
+                    if "%smaller_is%" eq "height" (set SQUARE_DIMEN=%height %+ call print-if-debug "crop to %height square")
+                    magick.exe convert "%IMAGE%" -gravity center -crop %SQUARE_DIMEN%x%SQUARE_DIMEN%+0+0 +repage "%IMAGE%"
+                    set image_is_changed=1
+                    set action_taken=cropped 
+                )
+        REM ** expand **
+                if %expand eq 1 (
+                    if "%smaller_is%" eq "width"  (set SQUARE_DIMEN=%height %+ call print-if-debug "expand to %height square")
+                    if "%smaller_is%" eq "height" (set SQUARE_DIMEN=%width% %+ call print-if-debug "expand to %width% square")
+                    REM        convert "%IMAGE%"                                       -gravity center -background black -extent %SQUARE_DIMEN%x%SQUARE_DIMEN% "%IMAGE%"
+                    magick.exe convert "%IMAGE%" -resize %SQUARE_DIMEN%x%SQUARE_DIMEN% -gravity center -background black -extent %SQUARE_DIMEN%x%SQUARE_DIMEN% "%IMAGE%"
+
+                    set image_is_changed=1
+                    set action_taken=expanded
+                )
+        REM ** resize **
+                if %crop ne 1 .and. %expand ne 1 (
+                    if "%smaller_is%" eq "width"  (set SQUARE_DIMEN=%height %+ call print-if-debug "resize  width of %width% to be %height")
+                    if "%smaller_is%" eq "height" (set SQUARE_DIMEN=%width% %+ call print-if-debug "resize height of %height to be %width%")
+                    magick.exe convert "%IMAGE%" -resize %SQUARE_DIMEN%x%SQUARE_DIMEN%! -gravity center -crop %SQUARE_DIMEN%x%SQUARE_DIMEN%+0+0 +repage "%IMAGE%"
+                    set image_is_changed=1
+                    set action_taken=squished/resized
+                ) 
 
 
 REM if it's changed, let user know:

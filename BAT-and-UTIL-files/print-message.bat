@@ -58,7 +58,10 @@ REM Validate parameters
         call validate-environment-variables TYPE BLINK_ON BLINK_OFF REVERSE_ON REVERSE_OFF ITALICS_ON ITALICS_OFF BIG_TEXT_LINE_1 BIG_TEXT_LINE_2 OUR_COLORTOUSE DO_PAUSE 
         set VALIDATED_PRINTMESSAGE_ENV=1
     )
-    set MESSAGE=%@UNQUOTE[%MESSAGE%]
+
+
+REM convert special characters
+    set MESSAGE=%@REPLACE[\n,%@CHAR[12]%@CHAR[13],%@REPLACE[\t,%@CHAR[9],%@UNQUOTE[%MESSAGE]]]
 
 
 REM Type alias/synonym handling
@@ -68,9 +71,11 @@ REM Type alias/synonym handling
 
 
 REM Behavior overides and message decorators depending on the type of message?
+                                       set DECORATOR_LEFT=              %+ set DECORATOR_RIGHT=
     if  "%TYPE%"  eq "UNIMPORTANT"    (set DECORATOR_LEFT=...           %+ set DECORATOR_RIGHT=)
     REM to avoid issues with the redirection character, ADVICE's left-decorator is inserted at runtime
     REM "%TYPE%"  eq "ADVICE"         (set DECORATOR_LEFT=`-->`         %+ set DECORATOR_RIGHT=) 
+    if  "%TYPE%"  eq "NORMAL"         (set DECORATOR_LEFT=              %+ set DECORATOR_RIGHT=) 
     if  "%TYPE%"  eq "ADVICE"         (set DECORATOR_LEFT=              %+ set DECORATOR_RIGHT=) 
     if  "%TYPE%"  eq "DEBUG"          (set DECORATOR_LEFT=- DEBUG: ``   %+ set DECORATOR_RIGHT=)
     if  "%TYPE%"  eq "LESS_IMPORTANT" (set DECORATOR_LEFT=* ``          %+ set DECORATOR_RIGHT=)

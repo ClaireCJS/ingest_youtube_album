@@ -24,13 +24,14 @@ REM DEBUGGY stuff
         call set-task "downloading youtube albums"
 
 REM check parameters & environment
-        if "%URL%" eq "" (call error "Need URL!" %+ goto :END)
+        if "%1"    eq "" .or. "%URL%" eq "" (call error "Need URL!" %+ goto :END)
         call validate-in-path               ingest_youtube_album.py delete-zero-byte-files important important_less errorlevel delete-largest-file warning error print-if-debug set-task metamp3 metaflac yt-dlp set-latest-filename openimage get-image-dimensions askyn crop-center-square-of-image make-image-square celebration change-into-temp-folder expand-image-to-square
         call validate-environment-variables ANSI_BRIGHT_CYAN faint_on faint_off italics_on italics_off underline_on underline_off filemask_image filemask_audio %+ REM most of these are set by set-colors.bat:
 
 
 REM Extensions that we may be downloading:
         set EXTENSIONS_WE_ARE_POSSIBLY_DOWNLOADING=*.opus;*.webm;*.mp3;*.flac
+        pushd 
 
 
 REM secret command line options
@@ -84,7 +85,7 @@ REM do everything in a temp folder!
 
     REM would like these i think --compat-options embed-metadata 
     call warning "About to download a youtube video of a song, or chapter-separated album, to mp3 format!"
-    call warning "ytl-dlp %URL% (with extra steps)" %+ pause %+ %COLOR_RUN% 
+    call warning "yt-dlp %URL% (with extra steps)"  %+ pause %+ %COLOR_RUN% 
     %COLOR_RUN%
     @echo on
     yt-dlp --verbose --write-info-json --write-description --extractor-args   "youtube:player_client=android" --split-chapters %URL% -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 --embed-metadata   --write-thumbnail  --embed-thumbnail 
@@ -180,9 +181,65 @@ REM rename files to the filenames we like
             %COLOR_SUCCESS% 
             if exist *.description (ren *.description "%LATESTFILENAME_BASE%.txt" )
             if exist *.json        (ren *.json        "%LATESTFILENAME_BASE%.json")
-            for %file in (%FILEMASK_IMAGE%) do echo if exist "%file%" ren "%file%" "%LATESTFILENAME_BASE%.%@EXT[%FILE]"
-            for %file in (%FILEMASK_IMAGE%) do      if exist "%file%" ren "%file%" "%LATESTFILENAME_BASE%.%@EXT[%FILE]"
+            REM %file in (%FILEMASK_IMAGE%) do echo if exist "%file%" ren "%file%" "%LATESTFILENAME_BASE%.%@EXT[%FILE]"
+            echos %FAINT_ON%
+            for %file in (%FILEMASK_IMAGE%) do      if exist "%file%" (echos %FAINT_ON% %+ ren "%file%" "%LATESTFILENAME_BASE%.%@EXT[%FILE]")
+            echos %FAINT_OFF%
         )
+
+
+
+
+
+REM Fix cover image - before running the ingest script that may move it elsewhere and make future changes a bit more confusing
+REM                 \-- it may need cropping of just-the-center-square (720x720 square image  centered across a 1280x720 canvas with black sidebars)
+REM                 \-- it may need resized  in order to become square (720x720 square image stretched across a 1280x720 canvas)
+        :fix_image
+
+        REM get image name
+            call   set-latest-filename %filemask_image%
+            set image=%latest_filename%
+
+        REM let user know what's going on
+            call warning "About to open image - our goal is to make it square for album cover embedding, so check it out"
+            call unimportant "Image filename = %image%"
+            REM pause
+
+        REM display image
+            call openimage "%image%"
+
+        REM prompt/correct image
+            set action_taken=
+            set image_was_changed=0
+            set         Q1="Does this need to be cropped  to square? (i.e. crop out black boxes on the sides)"
+            set         Q2="Does this need to be expanded to square? (i.e. it is a rectangle & we want to add black boxes at the top & bottom)?"
+            set         Q3="Does this need to be squished to square? (i.e. it is obviously a square incorrectly stretched out to rectangle)" 
+            call askyn %Q1% no %+ if %do_it eq 1 (set image_was_changed=1 %+ call crop-center-square-of-image "%image%" %+ goto :done_with_questions)
+            call askyn %Q2% no %+ if %do_it eq 1 (set image_was_changed=1 %+ call expand-image-to-square      "%image%" %+ goto :done_with_questions)
+            call askyn %Q3% no %+ if %do_it eq 1 (set image_was_changed=1 %+ call make-image-square           "%image%" %+ goto :done_with_questions)
+            :done_with_questions
+
+            :embed_again
+            if %image_was_changed eq 1 (
+                if %auto_embed ne 1 (call openimage "%image%")
+                call warning "Image was changed, so we will re-embed the artwork"
+                if %auto_embed ne 1 (pause)
+
+                if not exist "%image%" (call error "image of '%image%' doesn't exist")
+                set DONT_DELETE_ART_AFTER_EMBEDDING=1
+
+                %COLOR_IMPORTANT% %+ echos Embedding...
+                for %song in (%filemask_audio%) (
+                    call randfg
+                    echos .
+                    call add-art-to-song "%IMAGE%" "%song%" 
+                )
+
+            )
+
+        :done_fixing_image
+
+
 
 
 REM Tag and move the files with our assistant python script:
@@ -214,18 +271,27 @@ REM Add replaygain tags
                 call                              %INGEST_RETURN_SCRIPT%
             )               
             echo. %+ echo. %+ echo. %+ echo. %+ echo. %+ echo.          
-            call warning "About to add replaygain tags in %_CWD..." %+ call pause-if-debug "force" 
+            call warning "About to add replaygain tags in %_CWP" %+ call pause-if-debug "force" 
             call add-ReplayGain-tags  
+            call errorlevel "replaygain tag add problem in %0 line 221ish"
         popd  
         if exist go-to-album.bat (*del go-to-album.bat)             %+ REM now that we've used it, we don't need it  [TODO maybe change to *del]
         *del /q _ingest.log >nul                                    %+ REM the log is actually copied into our target folder but a copy remains here, which we do not want
 
 
 REM Allow us to manually adjust the filename 
+        echos %FAINT_ON%
         call delete-zero-byte-files
+        echos %FAINT_OFF%
         echo. %+ echo. %+ echo. %+ echo. %+ echo. 
         call set-latest-filename
         call rn "%latest_file%"
+
+
+
+
+
+
 
 
 
@@ -235,61 +301,17 @@ REM Change out of temp folder and move things back to where we started
         call validate-env-var TEMP_FOLDER WHERE_WE_STARTED
         echo. %+ echo. %+ echo. 
         %COLOR_IMPORTANT_LESS% %+ echo * Current folder = %_CWD %+ echo. 
-        %COLOR_WARNING%        %+ echos * About to move everything out of our TEMP_FOLDER``
-        %COLOR_WARNING_SOFT%   %+ echos  (%TEMP_FOLDER) ``
+        %COLOR_WARNING%        %+ echos * About to move everything out of our TEMP_FOLDER:``
+        %COLOR_WARNING_SOFT%   %+ echos  %TEMP_FOLDER ``
         %COLOR_NORMAL%         %+ echo. 
         %COLOR_NORMAL%         %+ echos   ``
-        %COLOR_WARNING%        %+ echos and back to: %WHERE_WE_STARTED%
+        %COLOR_WARNING%        %+ echos and back to:``
+        %COLOR_NORMAL%         %+ echos                                      ``
+        %COLOR_WARNING_SOFT%   %+ echos %WHERE_WE_STARTED%
         %COLOR_NORMAL%         %+ echo.
                                   pause
         %COLOR_SUCCESS%        %+ mv /ds "%TEMP_FOLDER%" .
 
-
-REM Fix cover image -
-REM                 \-- it may need cropping of just-the-center-square (720x720 square image  centered across a 1280x720 canvas with black sidebars)
-REM                 \-- it may need resized  in order to become square (720x720 square image stretched across a 1280x720 canvas)
-        :fix_image
-
-        REM get image name
-            call   set-latest-filename %filemask_image%
-            set image=%latest_filename%
-
-        REM let user know what's going on
-            call warning "About to open image - our goal is to make it square for album cover embedding, so check it out"
-            REM pause
-
-        REM display image
-            call openimage "%image%"
-
-        REM prompt/correct image
-            set action_taken=
-            set image_was_changed=0
-            set         Q1="Does this need to be reduced  to square? (i.e. crop out black boxes on the sides)"
-            set         Q2="Does this need to be expanded to square? (i.e. it is a rectangle & we want to add black boxes at the top & bottom)?"
-            set         Q3="Does this need to be squished to square? (i.e. it is obviously a square incorrectly stretched out to rectangle)" 
-            call askyn %Q1% no %+ if %do_it eq 1 (set image_was_changed=1 %+ call crop-center-square-of-image "%image%")
-            call askyn %Q2% no %+ if %do_it eq 1 (set image_was_changed=1 %+ call expand-image-to-square      "%image%")
-            call askyn %Q3% no %+ if %do_it eq 1 (set image_was_changed=1 %+ call make-image-square           "%image%")
-
-            :embed_again
-            if %image_was_changed eq 1 (
-                if %auto_embed ne 1 (call openimage "%image%")
-                call warning "Image was changed, so we will re-embed the artwork"
-                if %auto_embed ne 1 (pause)
-
-                if not exist "%image%" (call error "image of '%image%' doesn't exist")
-                set DONT_DELETE_ART_AFTER_EMBEDDING=1
-
-                %COLOR_IMPORTANT% %+ echos Embedding...
-                for %song in (%filemask_audio%) (
-                    call randfg
-                    echos .
-                    call add-art-to-song "%IMAGE%" "%song%" 
-                )
-
-            )
-
-        :done_fixing_image
 
 
 
@@ -297,7 +319,7 @@ REM                 \-- it may need resized  in order to become square (720x720 
         echo. %+ echo. %+ echo. 
         call celebration "Youtube album download complete!!!!!"
         REM  celebration.bat->print-message.bat does titles automatically now so we don't need to do this anymore: title Completed:  Youtube album download
-
+        popd
         dir
 
 

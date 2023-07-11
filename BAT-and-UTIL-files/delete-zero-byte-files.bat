@@ -14,5 +14,5 @@ for %%f in (.\*) do (
 
 %COLOR_SUCCESS%
 echo.
-echo * All zero-byte files have been deleted, I think.
+echo * All zero-byte files have been deleted.
 

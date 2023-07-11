@@ -35,12 +35,12 @@ import fix_unicode_filenames
 
 
 
-DEBUG_SANITIZE_TEXT=False
-DEBUG_COMMENT_NEWLINES=False
-DEBUG_VIEW_TAG_VALUES_BEFORE_INSERTION=False
-DEBUG_FILENAME_SPLITTING=False
-DEBUG_FILE_RENAMING=False
-DEBUG_TAGGING_CRASHES = False
+DEBUG_SANITIZE_TEXT                    = False
+DEBUG_COMMENT_NEWLINES                 = False
+DEBUG_FILENAME_SPLITTING               = False
+DEBUG_FILE_RENAMING                    = False
+DEBUG_VIEW_TAG_VALUES_BEFORE_INSERTION = False
+DEBUG_TAGGING_CRASHES                  = False
 
 
 
@@ -221,11 +221,11 @@ def rename_tag_move_incoming_youtube_album(directory, our_json_file):
 
     # output scrubbed values
     log_print(f"{Fore.GREEN}{Style.NORMAL}", end="")
-    log_print(f"Artist Name 1: {artist}")
-    log_print(f"Artist Name 2: {artistname_filename}\n")
-    log_print(f" Album Name 1: {album_name}")
-    log_print(f" Album Name 2: {album_name_filename}")
-    log_print(f"         Year: {year}")
+    log_print(f"{Fore.GREEN}{Style.NORMAL}Artist Name 1: {Style.BRIGHT}{artist}")
+    log_print(f"{Fore.GREEN}{Style.NORMAL}Artist Name 2: {Style.BRIGHT}{artistname_filename}\n")
+    log_print(f"{Fore.GREEN}{Style.NORMAL} Album Name 1: {Style.BRIGHT}{album_name}")
+    log_print(f"{Fore.GREEN}{Style.NORMAL} Album Name 2: {Style.BRIGHT}{album_name_filename}")
+    log_print(f"{Fore.GREEN}{Style.NORMAL}\nYear: {Style.BRIGHT}{year}")
 
     # make our new folder
     our_new_folder = os.path.join(artistname_filename, f"{year} - {album_name_filename}")
@@ -289,16 +289,17 @@ def clear_keyboard_buffer():
 
 
 def rename_with_companion_rename(filename_old, filename_new, directory="."):
-    filename_old, ext_old = os.path.splitext(os.path.basename(filename_old))                          # pylint: disable=W0612
-    filename_new, ext_new = os.path.splitext(os.path.basename(filename_new))                          # pylint: disable=W0612
+    filename_old, ext_old = os.path.splitext(os.path.basename(filename_old))                              # pylint: disable=W0612
+    filename_new, ext_new = os.path.splitext(os.path.basename(filename_new))                              # pylint: disable=W0612
     for filename in os.listdir(directory):
-        basename_file, ext_file = os.path.splitext(filename)                                          # pylint: disable=W0612
+        basename_file, ext_file = os.path.splitext(filename)                                              # pylint: disable=W0612
         if basename_file.startswith(filename_old):
             old_filepath = os.path.join(directory, filename)
             new_filepath = os.path.join(directory, filename.replace(filename_old, filename_new, 1))
             os.rename(old_filepath, new_filepath)
-            log_print(f"{Fore.BLUE}  Renamed companion: {old_filepath}")                              # Print the old and new filepaths
-            log_print(f"{Fore.BLUE}                 To: {new_filepath}{Fore.RESET}")                  # Print the old and new filepaths
+            dim = '\033[2m'
+            log_print(f"{dim}                 Renamed companion: {old_filepath}")                              # Print the old and new filepaths
+            log_print(f"{dim}                                To: {new_filepath}{Fore.RESET}")                  # Print the old and new filepaths
 
 
 def process_files(directory,artist="",year="",album_name="",publisher="",genre="",description="",url="",orig_artist="",our_new_folder="",num_mp3s=123456):                   #pylint: disable=R0913,R0912,R0915
@@ -312,14 +313,15 @@ def process_files(directory,artist="",year="",album_name="",publisher="",genre="
 
         # split values from filename - a mess because it was founded on chatgpt code that wasn't great and just keeps getting fixed as new filenames break it
         already_processed = False
-        if re.match(r'^\d+_', file):                                                          # Processed file format: XX_Name
-            already_processed = True
-            #parts = [album_name, file[3:]]
-            parts = file.rsplit( '_' , 1)
-        else:                                                                                 # Original file format: Album - XX Name
-            already_processed = False
-            parts = file.rsplit(' - ', 1)
-
+        parts = re.split(r' - (?=\d)', file, maxsplit=1)                                      # New method 20230711
+        if len(parts) != 2:
+            if re.match(r'^\d+_', file):                                                      # Processed file format: XX_Name
+                already_processed = True
+                #parts = [album_name, file[3:]]
+                parts = file.rsplit( '_' , 1)
+            else:                                                                             # Original file format: Album - XX Name
+                already_processed = False
+                parts = file.rsplit(' - ', 1)
         if len(parts) != 2:                                                                   # got backed into a corner here, some of this part was poorly written by chatgpt
             parts = ["", file]
         if DEBUG_FILENAME_SPLITTING: log_print(f"\n{Fore.YELLOW}{Style.BRIGHT}* parts(b12)==== {Fore.CYAN}{Style.NORMAL}{parts}")
@@ -333,51 +335,51 @@ def process_files(directory,artist="",year="",album_name="",publisher="",genre="
         #f num_mp3s > 1: chapter_id_title = "0" + parts[1]                                    # Adding back the "0"
         #lse:            chapter_id_title =       parts[1]                                    # ...(or not)
         chapter_id_title = parts[1]
-        if DEBUG_VIEW_TAG_VALUES_BEFORE_INSERTION: log_print(f"\tchapter_id_title[55]={chapter_id_title},already_processed={already_processed}")                                                                                              #chapter_id_title[55]=Where is My Mind but with the SM64 Soundfont [ePL44jEEOCQ].mp3,already_processed=False
+        if DEBUG_VIEW_TAG_VALUES_BEFORE_INSERTION: log_print(f"\t{Fore.MAGENTA}chapter_id_title[55]={chapter_id_title},already_processed={already_processed}")                                                                                              #chapter_id_title[55]=Where is My Mind but with the SM64 Soundfont [ePL44jEEOCQ].mp3,already_processed=False
         chapter_num="1"
         if not already_processed:                                                             # Now, we split chapter_id_title into chapter_num, title and youtube_id
             if num_mp3s == 1:
                 rest = chapter_id_title
-                if DEBUG_FILENAME_SPLITTING: log_print(f"\n{Fore.RED}{Back.BLUE}{Style.BRIGHT}* chap,rest[YY]={Fore.CYAN}{Back.BLACK}{Style.NORMAL}chapter_num={chapter_num},rest={rest}")
+                if DEBUG_FILENAME_SPLITTING: log_print(f"\n\t{Fore.RED}{Back.BLUE}{Style.BRIGHT}* chap,rest[YY]={Fore.CYAN}{Back.BLACK}{Style.NORMAL}chapter_num={chapter_num},rest={rest}")
                 #title, youtube_id = rest.rsplit(" [", 1)                                     #* chap,rest[YY]=chapter_num=Where,rest=is My Mind but with the SM64 Soundfont [ePL44jEEOCQ].mp3
                 #youtube_id  = youtube_id.rstrip(']')
             else:
                 if " " in chapter_id_title: chapter_num, rest = chapter_id_title.split(" ", 1)
-                if DEBUG_FILENAME_SPLITTING: log_print(f"\n{Fore.YELLOW}{Style.BRIGHT}* chap,rest[YY]= {Fore.CYAN}{Style.NORMAL}chapter_num={chapter_num},rest={rest}")
+                if DEBUG_FILENAME_SPLITTING: log_print(f"\n\t{Fore.YELLOW}{Style.BRIGHT}* chap,rest[YY]= {Fore.CYAN}{Style.NORMAL}chapter_num={chapter_num},rest={rest}")
             if "[" in rest and "]" in rest:
                 title, youtube_id = rest.rsplit(" [", 1)
                 youtube_id = youtube_id.rstrip(']')
             else:
-                title = rest
+                title = rest.strip(' ')
                 youtube_id = ""
         if num_mp3s == 1:     chapter_num = "1"
         if already_processed: chapter_num, title = parts[0], parts[1]
 
 
-        print(f"Chapter #{chapter_num}:'{chapter_id_title}' [already_processed={already_processed}]")
+        print(f"{Fore.CYAN}  - Chapter #{chapter_num}: {chapter_id_title} [already_processed={already_processed}]")
 
         ##### INSERT TAGS :
-        if DEBUG_VIEW_TAG_VALUES_BEFORE_INSERTION: log_print(f"\ttitle[xx]={title},year={year},#={chapter_num},youtube_video_title_string={youtube_video_title_string},chapter_id_title={chapter_id_title},youtube_id={youtube_id},orig_artist={orig_artist}")
+        if DEBUG_VIEW_TAG_VALUES_BEFORE_INSERTION: log_print(f"\t{Fore.MAGENTA}year={year},#={Style.BRIGHT}{chapter_num}{Style.NORMAL},title[xx]={title},youtube_video_title_string={youtube_video_title_string},chapter_id_title={chapter_id_title},youtube_id={youtube_id},orig_artist={orig_artist}")
 
         #og_print(f"{Fore.RED}{Style.BRIGHT}  ************ Updating Tags!!! (file={file}) ************{Fore.BLACK}{Style.NORMAL}")
-        log_print(f"{Fore.CYAN}{Style.NORMAL}                   ...Updating Tags!{Fore.BLACK}{Style.NORMAL}")
+        log_print(f"{Fore.CYAN}{Style.NORMAL}               ...Updating Tags!{Fore.BLACK}{Style.NORMAL}")
         audiofile = eyed3.load(file)
-        if DEBUG_TAGGING_CRASHES: log_print(f"{Fore.RED}{Style.BRIGHT}  * audiofile loaded * {Fore.BLACK}{Style.NORMAL}")
+        if DEBUG_TAGGING_CRASHES: log_print(f"{Fore.RED}{Style.BRIGHT}      * audiofile loaded * {Fore.BLACK}{Style.NORMAL}")
 
         if not audiofile.tag: audiofile.initTag()
-        if DEBUG_TAGGING_CRASHES: log_print(f"{Fore.RED}{Style.BRIGHT}  * tag initialized * {Fore.BLACK}{Style.NORMAL}")
+        if DEBUG_TAGGING_CRASHES: log_print(f"{Fore.RED}{Style.BRIGHT}      * tag initialized * {Fore.BLACK}{Style.NORMAL}")
 
         # handle comment
         description_old_4print = description.replace('\r','\\r').replace('\n','\\n')
         description_new = sanitize_text(description)
-        if DEBUG_COMMENT_NEWLINES: log_print(f"\t{Fore.RED}{Style.NORMAL}description_old_4print={description_old_4print}{Fore.YELLOW}"); debug_char(description_new)
+        if DEBUG_COMMENT_NEWLINES: log_print(f"\t\t{Fore.RED}{Style.NORMAL}description_old_4print={description_old_4print}{Fore.YELLOW}"); debug_char(description_new)
 
         description_new = re.sub(  '\n', '\r\n', description)
         description_new_4print = description_new.replace(r'\r','\\r'  ).replace('\n','\\n')
-        if DEBUG_COMMENT_NEWLINES: log_print(f"\t{Fore.YELLOW}{Style.NORMAL}description_new_4print={description_new_4print}{Fore.YELLOW}" + f"\t{Fore.YELLOW}{Style.NORMAL}description_new="  + f"{description_new}"  + f"{Fore.YELLOW}")
+        if DEBUG_COMMENT_NEWLINES: log_print(f"\t\t{Fore.YELLOW}{Style.NORMAL}description_new_4print={description_new_4print}{Fore.YELLOW}" + f"\t{Fore.YELLOW}{Style.NORMAL}description_new="  + f"{description_new}"  + f"{Fore.YELLOW}")
 
         if description_new: audiofile.tag.comments.set(description_new)
-        if DEBUG_TAGGING_CRASHES: log_print(f"{Fore.RED}{Style.BRIGHT}  * comment ready * {Fore.BLACK}{Style.NORMAL}")
+        if DEBUG_TAGGING_CRASHES: log_print(f"{Fore.RED}{Style.BRIGHT}      * comment ready * {Fore.BLACK}{Style.NORMAL}")
 
         #handle the rest
         if orig_artist: set_artist_tags(audiofile=audiofile, artist=artist, orig_artist=orig_artist)            #handles several tags
@@ -391,9 +393,9 @@ def process_files(directory,artist="",year="",album_name="",publisher="",genre="
         if publisher:   audiofile.tag.publisher  = sanitize_text(publisher  ) #.decode('utf-8')
         if num_mp3s > 0:                                                                                        #set to 1 to not tag album in single downloads, but we decided to include album in single downloads -- much like how a single is titled after the song it is
             if album_name: audiofile.tag.album   = sanitize_text(album_name ) #.decode('utf-8')
-        if DEBUG_TAGGING_CRASHES: log_print(f"{Fore.RED}{Style.BRIGHT}  * about to save * {Fore.BLACK}{Style.NORMAL}")
+        if DEBUG_TAGGING_CRASHES: log_print(f"{Fore.RED}{Style.BRIGHT}      * about to save * {Fore.BLACK}{Style.NORMAL}")
         audiofile.tag.save(version=eyed3.id3.ID3_V2_3)                                                          #v2.3 tags play well with others. 2.4 don't. 2.4 was incompatible with metamp3.exe, for one thing
-        if DEBUG_TAGGING_CRASHES: log_print(f"{Fore.RED}{Style.BRIGHT}  * saved * {Fore.BLACK}{Style.NORMAL}")
+        if DEBUG_TAGGING_CRASHES: log_print(f"{Fore.RED}{Style.BRIGHT}      * saved * {Fore.BLACK}{Style.NORMAL}")
 
 
         ##### ACTUALLY MOVE / RENAME THE FILE(s):
@@ -524,7 +526,8 @@ def strip_artist_from_album_or_filename(album_or_song_or_file_name, artist_name,
         if  album_or_song_or_file_name.startswith(f"{artist_name}'s"):
             album_or_song_or_file_name = album_or_song_or_file_name[len(f"{artist_name}'s"):]
         else:
-            print(f"No match found for album name: {album_or_song_or_file_name}")
+            #print(f"No artist/album match found for album name: {album_or_song_or_file_name}")
+            pass
     album_or_song_or_file_name = album_or_song_or_file_name.strip()
     return album_or_song_or_file_name
 
@@ -539,4 +542,5 @@ if __name__ == "__main__":
     ## some tests:
     #print("GA: " + get_artist_from_filename           ("The Pixies - Where is My Mind but with the SM64 Soundfont [ePL44jEEOCQ].mp3"))
     #print("SA: " + strip_artist_from_album_or_filename("The Pixies - Where is My Mind but with the SM64 Soundfont [ePL44jEEOCQ].mp3","The Pixies",num_mp3s=1))
+
 

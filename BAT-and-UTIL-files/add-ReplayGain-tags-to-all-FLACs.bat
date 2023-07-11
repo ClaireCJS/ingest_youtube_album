@@ -9,7 +9,15 @@ if     exist *.flac (goto :FlacExists_YES)
 
 :FlacExists_YES
 %COLOR_RUN% %+ echo * Adding ReplayGain tags to flac files...
-for %%flac in (*.flac) (%COLOR_LESS_IMPORTANT% %+ echo      - %flac %+ metaflac --add-replay-gain "%flac")
+for %%flac in (*.flac) (
+    %COLOR_LESS_IMPORTANT% 
+    echo      - %flac 
+    metaflac --add-replay-gain "%flac"
+    call errorlevel "something went wrong with adding replaygain tags to %flac in %0"
+)
+
+
+
 
 
 

@@ -543,4 +543,3 @@ if __name__ == "__main__":
     #print("GA: " + get_artist_from_filename           ("The Pixies - Where is My Mind but with the SM64 Soundfont [ePL44jEEOCQ].mp3"))
     #print("SA: " + strip_artist_from_album_or_filename("The Pixies - Where is My Mind but with the SM64 Soundfont [ePL44jEEOCQ].mp3","The Pixies",num_mp3s=1))
 
-

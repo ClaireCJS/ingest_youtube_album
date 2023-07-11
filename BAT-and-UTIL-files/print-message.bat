@@ -192,14 +192,14 @@ REM Post-message beeps and sound effects
             beep question
         )                                                                                                                              
         if "%TYPE%" eq "FATAL_ERROR" (
-            for %alarmNum in (1 2 3) do (beep ^ beep 145 1 ^ beep 120 1 ^ beep 100 1 ^ beep 80 1 ^ beep 65 1 ^ beep 50 1 ^ beep 40 1)
+            for %alarmNum in (1 2 3) do (beep %+ beep 145 1 %+ beep 120 1 %+ beep 100 1 %+ beep 80 1 %+ beep 65 1 %+ beep 50 1 %+ beep 40 1)
             beep hand
          )        
 
     REM Do delay:
         if %DO_DELAY gt 0 (delay %DO_DELAY)
     
-REM For errors, give chance to gracefully exit the script (no more mashing of ^C / ^Break)
+REM For errors, give chance to gracefully exit the script (no more mashing of ctrl-C / ctrl-Break)
         if "%TYPE%" eq "FATAL_ERROR" .or. "%TYPE%" eq "ERROR" (
             set DO_IT=
             call askyn "Cancel all execution and return to command line?" yes

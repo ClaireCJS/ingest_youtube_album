@@ -5,6 +5,12 @@
 :PUBLISH:
 :DESCRIPTION:  Download a "youtube album" (album posted as a youtube video) to separate mp3s (per chapter in the youtube video, if there are any), tagged, renamed, ReplayGain'ed, and moved to proper folder structure.  It can also do single songs, but that wasn't its original purpose.
 :USAGE:        download-youtube-video-as-mp3-album https://www.youtube.com/watch?v=6w8dVVf6UnY
+:USAGE:        download-youtube-video-as-mp3-album ingest         - re-run starting at the the python ingest script
+:USAGE:        download-youtube-video-as-mp3-album after_ingest   - re-run starting AFTER  the python ingest script
+:USAGE:        download-youtube-video-as-mp3-album ReplayGain     - re-run starting at the embeding of replaygain tags
+:USAGE:        download-youtube-video-as-mp3-album rename         - re-run starting at renaming the downloaded file
+:USAGE:        download-youtube-video-as-mp3-album img            - re-run starting at fixing the cover image
+:USAGE:        download-youtube-video-as-mp3-album embed          - re-embed the current cover image
 :REQUIRES:     metaflac.exe (to add ReplayGain tags to FLAC files), metaflac.mp3 (to add ReplayGain tags to MP3 files), yt-dlp.exe (to download YouTube videos), our messaging system & validator scripts
 :DEPENDENCIES: set-latestfilename.bat (to determine latest/youngest file), delete-largest-file.bat (to delete full-album after splitting into chapters), set-task (but only to set the TASK and window title)
 
@@ -13,15 +19,14 @@ REM DEBUGGY stuff
         set URL="%*"
         :eset URL
         echo. %+ echo.
-        call warning        "About to download a youtube video of a song, or chapter-separated album, to mp3 format!"
         call print-if-debug "URL is:         %URL%"
         call print-if-debug "Parameters are: %*"
         call set-task "downloading youtube albums"
 
 REM check parameters & environment
         if "%URL%" eq "" (call error "Need URL!" %+ goto :END)
-        call validate-in-path               ingest_youtube_album.py delete-zero-byte-files important important_less errorlevel delete-largest-file warning error print-if-debug set-task metamp3 metaflac yt-dlp set-latest-filename openimage get-image-dimensions askyn crop-center-square-of-image make-image-square celebration change-into-temp-folder
-        call validate-environment-variables ANSI_BRIGHT_CYAN faint_on faint_off italics_on italics_off underline_on underline_off filemask_image %+ REM most of these are set by set-colors.bat:
+        call validate-in-path               ingest_youtube_album.py delete-zero-byte-files important important_less errorlevel delete-largest-file warning error print-if-debug set-task metamp3 metaflac yt-dlp set-latest-filename openimage get-image-dimensions askyn crop-center-square-of-image make-image-square celebration change-into-temp-folder expand-image-to-square
+        call validate-environment-variables ANSI_BRIGHT_CYAN faint_on faint_off italics_on italics_off underline_on underline_off filemask_image filemask_audio %+ REM most of these are set by set-colors.bat:
 
 
 REM Extensions that we may be downloading:
@@ -43,6 +48,7 @@ REM secret command line options
         if "%1" eq "fix_image" .or. "%1" eq "fix_img" (goto :fix_image         )
         if "%1" eq  "fiximage" .or. "%1" eq  "fiximg" (goto :fix_image         )
         if "%1" eq     "image" .or. "%1" eq     "img" (goto :fix_image         )
+        if "%1" eq     "embed" .or. "%1" eq "reembed" (set image_was_changed=1 %+ goto :embed_again)
        :if "%1" != ""                                 (goto :%1                )                     %+ REM goto a specific label
 
 REM Ask where to place our downloads...
@@ -77,6 +83,7 @@ REM do everything in a temp folder!
     REM For a custom filename songname.%(ext)s.
 
     REM would like these i think --compat-options embed-metadata 
+    call warning "About to download a youtube video of a song, or chapter-separated album, to mp3 format!"
     call warning "ytl-dlp %URL% (with extra steps)" %+ pause %+ %COLOR_RUN% 
     %COLOR_RUN%
     @echo on
@@ -242,28 +249,47 @@ REM Fix cover image -
 REM                 \-- it may need cropping of just-the-center-square (720x720 square image  centered across a 1280x720 canvas with black sidebars)
 REM                 \-- it may need resized  in order to become square (720x720 square image stretched across a 1280x720 canvas)
         :fix_image
+
         REM get image name
             call   set-latest-filename %filemask_image%
             set image=%latest_filename%
 
+        REM let user know what's going on
+            call warning "About to open image - our goal is to make it square for album cover embedding, so check it out"
+            REM pause
+
         REM display image
             call openimage "%image%"
+
         REM prompt/correct image
             set action_taken=
-            set image_changed=0
-            set         Q1="Does this need the center square cropped out?"
-            set         Q2="Does this need to be reshaped to square? (i.e. it is currently very obviously in the wrong aspect ratio)" 
-            call askyn %Q1% no %+ if %do_it   eq 1 (set do_it_1=1)
-            call askyn %Q2% no %+ if %do_it   eq 1 (set do_it_2=1)
-            if                       %do_it_1 eq 1 (set image_changed=1 %+ set action_taken="cropped" %+ call crop-center-square-of-image "%image%")
-            if                       %do_it_2 eq 1 (set image_changed=1 %+ set action_taken="resized" %+ call make-image-square           "%image%")
+            set image_was_changed=0
+            set         Q1="Does this need to be reduced  to square? (i.e. crop out black boxes on the sides)"
+            set         Q2="Does this need to be expanded to square? (i.e. it is a rectangle & we want to add black boxes at the top & bottom)?"
+            set         Q3="Does this need to be squished to square? (i.e. it is obviously a square incorrectly stretched out to rectangle)" 
+            call askyn %Q1% no %+ if %do_it eq 1 (set image_was_changed=1 %+ call crop-center-square-of-image "%image%")
+            call askyn %Q2% no %+ if %do_it eq 1 (set image_was_changed=1 %+ call expand-image-to-square      "%image%")
+            call askyn %Q3% no %+ if %do_it eq 1 (set image_was_changed=1 %+ call make-image-square           "%image%")
 
-        REM report new situation
-            if %image_changed eq 1 (
-                call get-image-dimensions "%image%"
-                echo %ANSI_BRIGHT_CYAN%*** Image %faint_on%%image%%faint_off% has been %italics_on%%action_taken%%italics_off% to %underline_on%%dimensions%%underline_off%
+            :embed_again
+            if %image_was_changed eq 1 (
+                if %auto_embed ne 1 (call openimage "%image%")
+                call warning "Image was changed, so we will re-embed the artwork"
+                if %auto_embed ne 1 (pause)
+
+                if not exist "%image%" (call error "image of '%image%' doesn't exist")
+                set DONT_DELETE_ART_AFTER_EMBEDDING=1
+
+                %COLOR_IMPORTANT% %+ echos Embedding...
+                for %song in (%filemask_audio%) (
+                    call randfg
+                    echos .
+                    call add-art-to-song "%IMAGE%" "%song%" 
+                )
+
             )
 
+        :done_fixing_image
 
 
 

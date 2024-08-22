@@ -24,8 +24,8 @@ def validate_input(timestamps):
     for i, timestamp in enumerate(timestamps, start=1):
         time, title, end_time = timestamp_splitter(timestamp, timestamps, i)                                  #pylint: disable=W0612
         print(f"{Fore.LIGHTBLACK_EX}* Processing timestamp #{i} of '{timestamp}': time={time}, title={title}, end_time={end_time}")
-        if not re.match(r'^\d{1,2}:\d{2}$', time): raise ValueError(f"Oops! The time format for '{time}' seems incorrect. It should be in MM:SS format, like 00:30 or 2:15.")
-        if not title:                              raise ValueError(f"Hmm, we seem to be missing the title for the track at '{time}'. Could you check that for us?"                    )
+        if not re.match(r'^\d?:?\d{1,2}:\d{2}$', time): raise ValueError(f"Oops! The time format for '{time}' seems incorrect. It should be in MM:SS format, like 00:30 or 2:15.")
+        if not title:                                   raise ValueError(f"Hmm, we seem to be missing the title for the track at '{time}'. Could you check that for us?"                    )
 
 def timestamp_splitter(timestamp, timestamps, i):
     if ' ' in timestamp:

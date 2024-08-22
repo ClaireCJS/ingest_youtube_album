@@ -85,7 +85,7 @@ REM do everything in a temp folder!
 
     REM would like these i think --compat-options embed-metadata 
     call warning "About to download a youtube video of a song, or chapter-separated album, to mp3 format!"
-    call warning "yt-dlp %URL% (with extra steps)"  %+ pause %+ %COLOR_RUN% 
+    call warning "yt-dlp %italics_on%%URL%%italics_off% (with extra steps)"  %+ pause %+ %COLOR_RUN% 
     %COLOR_RUN%
     @echo on
     yt-dlp --verbose --write-info-json --write-description --extractor-args   "youtube:player_client=android" --split-chapters %URL% -f bestaudio --extract-audio --audio-format mp3 --audio-quality 0 --embed-metadata   --write-thumbnail  --embed-thumbnail 
@@ -152,6 +152,9 @@ REM do everything in a temp folder!
     REM        :: %(fps)s: The frame rate.
 
 
+REM Let's capture the filename as it is after downloading, to remind us later
+        call set-latest-filename %EXTENSIONS_WE_ARE_POSSIBLY_DOWNLOADING%
+        set FILENAME_AFTER_DOWNLOADING=%latestFilename%
 
 
 
@@ -165,19 +168,19 @@ REM rename files to the filenames we like
         set TEXT_INFO=README.txt
         set JSON_INFO=info.json
         echo. %+ echo. %+ echo. %+ echo. 
-        call important_less "Successfully downloaded %NUM_DOWNLOADED% files matching extensions '%EXTENSIONS_WE_ARE_POSSIBLY_DOWNLOADING%'"
+        call important_less "%EMOJI_CHECK_BOX_WITH_CHECK%Successfully downloaded %NUM_DOWNLOADED% files matching extensions '%EXTENSIONS_WE_ARE_POSSIBLY_DOWNLOADING%'"
         if %NUM_DOWNLOADED% GT 1 (
             set DOWNLOADS=many
             if exist *.description (ren *.description    %TEXT_INFO%)           %+ REM typically README.txt
             if exist *.json        (ren *.json           %JSON_INFO%)           %+ REM typically info.json
-            for %%G in (%filemask_image%) do (if exist "*%%G" set COVER_ART=cover.%@LOWER[%@EXT[%%G]] %+ %COLOR_RUN %+ ren "%%G" "%COVER_ART%" %+ %COLOR_IMPORTANT %+ call less_important "Cover art renamed to '%COVER_ART%'" )
+            for %%G in (%filemask_image%) do (if exist "*%%G" set COVER_ART=cover.%@LOWER[%@EXT[%%G]] %+ %COLOR_RUN %+ ren "%%G" "%COVER_ART%" %+ %COLOR_IMPORTANT %+ call less_important "%EMOJI_ARTIST_PALETTE%Cover art renamed to '%COVER_ART%'" )
             call validate-environment-variables TEXT_INFO JSON_INFO COVER_ART
         )
         if %NUM_DOWNLOADED% EQ 1 (
             set DOWNLOADS=one
             call set-latestfilename %EXTENSIONS_WE_ARE_POSSIBLY_DOWNLOADING%
             set LATESTFILENAME_BASE=%@NAME[%LATEST_FILENAME]
-            call unimportant "Latest filename is: %LATESTFILENAME_BASE%"
+            call unimportant "%EMOJI_STOPWATCH%Latest filename is: %LATESTFILENAME_BASE%"
             %COLOR_SUCCESS% 
             if exist *.description (ren *.description "%LATESTFILENAME_BASE%.txt" )
             if exist *.json        (ren *.json        "%LATESTFILENAME_BASE%.json")
@@ -201,9 +204,13 @@ REM                 \-- it may need resized  in order to become square (720x720 
             set image=%latest_filename%
 
         REM let user know what's going on
-            call warning "About to open image - our goal is to make it square for album cover embedding, so check it out"
-            call unimportant "Image filename = %image%"
-            REM pause
+            echo. %+ echo. %+ echo. %+ echo. %+ echo. %+ echo. %+ echo. 
+            call bigecho %EMOJI_STOP_SIGN%%EMOJI_STOP_SIGN%%EMOJI_STOP_SIGN%%EMOJI_STOP_SIGN%%EMOJI_STOP_SIGN%%EMOJI_STOP_SIGN%
+            set NEWLINE_REPLACEMENT=1
+            call warning_soft "About to open image - %italics_on%Remember%italics_off%: our goal is to make it %underline_on%%italics_on%square%italics_off%%underline_off% for album cover embedding\nBut first, just take a look at the image"
+            call bigecho %EMOJI_STOP_SIGN%%EMOJI_STOP_SIGN%%EMOJI_STOP_SIGN%%EMOJI_STOP_SIGN%%EMOJI_STOP_SIGN%%EMOJI_STOP_SIGN%
+            call unimportant "Image filename = '%italics%%image%%italics_off%', CWP='%italics%%_CWP%%italics_off%'"
+            pause %+ REM this pause is important to keep buffered keystrokes from answering the next questions
 
         REM display image
             call openimage "%image%"
@@ -211,24 +218,23 @@ REM                 \-- it may need resized  in order to become square (720x720 
         REM prompt/correct image
             set action_taken=
             set image_was_changed=0
-            set         Q1="Does this need to be cropped  to square? (i.e. crop out black boxes on the sides)"
-            set         Q2="Does this need to be expanded to square? (i.e. it is a rectangle & we want to add black boxes at the top & bottom)?"
-            set         Q3="Does this need to be squished to square? (i.e. it is obviously a square incorrectly stretched out to rectangle)" 
-            call askyn %Q1% no %+ if %do_it eq 1 (set image_was_changed=1 %+ call crop-center-square-of-image "%image%" %+ goto :done_with_questions)
-            call askyn %Q2% no %+ if %do_it eq 1 (set image_was_changed=1 %+ call expand-image-to-square      "%image%" %+ goto :done_with_questions)
-            call askyn %Q3% no %+ if %do_it eq 1 (set image_was_changed=1 %+ call make-image-square           "%image%" %+ goto :done_with_questions)
+            set         Q1="Does this need to be %EMOJI_LEFT_RIGHT_ARROW%%EMOJI_UP_DOWN_ARROW% %italics%%underline%expanded%italics_off%%underline_off% %EMOJI_LEFT_RIGHT_ARROW%%EMOJI_UP_DOWN_ARROW% to square? (i.e. what we have is a rectangle, so add black boxes at the top & bottom to make it square)?"
+            set         Q2="Does this need to be %EMOJI_SCISSORS% %italics%%underline%cropped%italics_off%%underline_off% %EMOJI_SCISSORS% to square? (i.e. crop out %faint%[black?]%faint_off% boxes on sides)"
+            set         Q3="Does this need to be %EMOJI_RIGHT_ARROW%%EMOJI_LEFT_ARROW% %italics%%underline%squished%italics_off%%underline_off% %EMOJI_RIGHT_ARROW%%EMOJI_LEFT_ARROW% to square? (i.e. what we have is obviously a square incorrectly stretched out to rectangle)" 
+            call askyn %Q1% yes 0 %+ if %do_it eq 1 (set image_was_changed=1 %+ call expand-image-to-square      "%image%" %+ goto :done_with_questions)
+            call askyn %Q2% yes 0 %+ if %do_it eq 1 (set image_was_changed=1 %+ call crop-center-square-of-image "%image%" %+ goto :done_with_questions)
+            call askyn %Q3% no  0 %+ if %do_it eq 1 (set image_was_changed=1 %+ call make-image-square           "%image%" %+ goto :done_with_questions)
             :done_with_questions
 
             :embed_again
             if %image_was_changed eq 1 (
-                if %auto_embed ne 1 (call openimage "%image%")
-                call warning "Image was changed, so we will re-embed the artwork"
-                if %auto_embed ne 1 (pause)
-
-                if not exist "%image%" (call error "image of '%image%' doesn't exist")
+                if %auto_embed ne 1    (call openimage  "%image%")
+                if not exist "%image%" (call error       "image of '%image%' doesn't exist")
+                call askyn "Are we satisfied with the new image?" yes 0
+                if %DO_IT eq 0 (call warning "Returning to command line..." %+ call advice "Run '%0 img' to return to this point" %+ cancel)
                 set DONT_DELETE_ART_AFTER_EMBEDDING=1
 
-                %COLOR_IMPORTANT% %+ echos Embedding...
+                call important "%EMOJI_INPUT_NUMBERS%Embedding..."
                 for %song in (%filemask_audio%) (
                     call randfg
                     echos .
@@ -245,10 +251,12 @@ REM                 \-- it may need resized  in order to become square (720x720 
 REM Tag and move the files with our assistant python script:
         set AUTOMATIC_UNICODE_CLEANING=1 %+ echo. %+ echo. %+ echo. %+ echo. %+ echo. %+ echo. %+ REM \_____the environment variable didn't seem to work 
         :Redo_fuf
+        echo. %+ echo. %+ echo. 
+        call important "%EMOJI_HAMMER% About to run %italics_on%fix-unicode-filenames%italics_off% %faint_on%(to cleanse files of any unicode/bad characters)%faint_off%..."
         call fix-unicode-filenames auto  %+ call errorlevel "uh oh spaghettios!!!!!!" %+ echo. %+ REM /     so we used the "auto" parameter instead
         if %REDO eq 1 goto :Redo_fuf
         set AUTOMATIC_UNICODE_CLEANING=0 %+ echo. %+ echo. %+ echo. %+ echo. %+ echo. 
-        call important "About to run youtube-album ingest script (ingest_youtube_album.py)..."
+        call important "%EMOJI_HAMMER_AND_PICK% About to run youtube-album ingest script (%italics_on%ingest_youtube_album.py%italics_off%)..."
         :ingest
         :befor_ingest
         :before_ingest
@@ -260,7 +268,9 @@ REM Tag and move the files with our assistant python script:
 
 
 REM Add replaygain tags
-        call warning "About to add ReplayGain tags..."
+        echo.
+        echo.
+        call warning "%EMOJI_HAMMER% About to add %italics_on%ReplayGain%italics_off% tags in: %faint%%italics%%_CWP%%italics_off%%faint_off%"
         REM pause
         :add_replaygain_tags
         pushd 
@@ -271,12 +281,14 @@ REM Add replaygain tags
                 call                              %INGEST_RETURN_SCRIPT%
             )               
             echo. %+ echo. %+ echo. %+ echo. %+ echo. %+ echo.          
-            call warning "About to add replaygain tags in %_CWP" %+ call pause-if-debug "force" 
+            REM call warning "About to add replaygain tags in %_CWP" 
+            call pause-if-debug "force" 
             call add-ReplayGain-tags  
-            call errorlevel "replaygain tag add problem in %0 line 221ish"
+            call errorlevel "replaygain tag add problem in %0 line 276ish"
         popd  
         if exist go-to-album.bat (*del go-to-album.bat)             %+ REM now that we've used it, we don't need it  [TODO maybe change to *del]
-        *del /q _ingest.log >nul                                    %+ REM the log is actually copied into our target folder but a copy remains here, which we do not want
+        *del /q _ingest.log >nul                                    %+ REM ingest log is actually copied into our target folder but a copy remains here, which we do not want
+        call fix-unicode-filenames.bat delete_log                   %+ REM ingest can also create a fix_unicode_filenames.log file if filenames end up getting scrubbed
 
 
 REM Allow us to manually adjust the filename 
@@ -285,6 +297,13 @@ REM Allow us to manually adjust the filename
         echos %FAINT_OFF%
         echo. %+ echo. %+ echo. %+ echo. %+ echo. 
         call set-latest-filename
+        echo.
+        echo.
+        echo.
+        echo %ANSI_COLOR_IMPORTANT%EMOJI_FILE_FOLDER% Original filename was: %FAINT_ON%%ITALICS_ON%%FILENAME_AFTER_DOWNLOADING%%FAINT_OFF%%ITALICS_OFF%
+        echo.
+        call important "Fix your filename here %faint_on%(if you need to)%faint_off%:"
+        echo.
         call rn "%latest_file%"
 
 
@@ -300,16 +319,17 @@ REM Change out of temp folder and move things back to where we started
         cd ..
         call validate-env-var TEMP_FOLDER WHERE_WE_STARTED
         echo. %+ echo. %+ echo. 
-        %COLOR_IMPORTANT_LESS% %+ echo * Current folder = %_CWD %+ echo. 
-        %COLOR_WARNING%        %+ echos * About to move everything out of our TEMP_FOLDER:``
-        %COLOR_WARNING_SOFT%   %+ echos  %TEMP_FOLDER ``
+        %COLOR_IMPORTANT_LESS% %+ echo * Current folder = %EMOJI_OPEN_FILE_FOLDER% %_CWD %EMOJI_OPEN_FILE_FOLDER% %+ echo. 
+        %COLOR_WARNING%        %+ echos %EMOJI_WARNING% About to move everything out of our TEMP_FOLDER:``
+        %COLOR_WARNING_SOFT%   %+ echos  %overstrike%%TEMP_FOLDER%%overstrike_off% ``
         %COLOR_NORMAL%         %+ echo. 
         %COLOR_NORMAL%         %+ echos   ``
-        %COLOR_WARNING%        %+ echos and back to:``
+        %COLOR_WARNING%        %+ echos  and back to:``
         %COLOR_NORMAL%         %+ echos                                      ``
-        %COLOR_WARNING_SOFT%   %+ echos %WHERE_WE_STARTED%
+        %COLOR_WARNING_SOFT%   %+ echos %italics%%WHERE_WE_STARTED%%italics_off%
         %COLOR_NORMAL%         %+ echo.
                                   pause
+                                  set MOVE_DECORATOR=%ANSI_COLOR_SUCCESS%%FAINT_ON%%ITALICS%%@ANSI_RGB_BG[0,32,0]
         %COLOR_SUCCESS%        %+ mv /ds "%TEMP_FOLDER%" .
 
 
@@ -317,7 +337,7 @@ REM Change out of temp folder and move things back to where we started
 
 :END
         echo. %+ echo. %+ echo. 
-        call celebration "Youtube album download complete!!!!!"
+        call celebration "%EMOJI_CHECK_MARK%Download complete!!!%EMOJI_CHECK_MARK%"
         REM  celebration.bat->print-message.bat does titles automatically now so we don't need to do this anymore: title Completed:  Youtube album download
         popd
         dir

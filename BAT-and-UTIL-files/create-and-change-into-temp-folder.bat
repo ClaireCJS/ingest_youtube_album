@@ -19,7 +19,7 @@ REM Store the folder we were in when we created the temp folder
     set WHERE_WE_STARTED=%_CWD
 
 REM Create a temp folder:
-    call          set-TEMP_FOLDER %PURPOSE% %~2
+    call          set-TEMP-FOLDER %PURPOSE% %~2
     mkdir            %TEMP_FOLDER%
     call val-env-var  TEMP_FOLDER
 

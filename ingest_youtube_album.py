@@ -135,7 +135,7 @@ def preprocess_filenames(directory):
 
 
 def show_audio_files_in_rainbow(directory):
-    log_print(f"\n\n\n{Fore.CYAN}{Style.BRIGHT}Here are our filenames:{Style.NORMAL}\n")
+    log_print(f"{Fore.CYAN}{Style.BRIGHT}Here are our filenames:{Style.NORMAL}\n")
     color_list = [Fore.LIGHTRED_EX, Fore.RED, Fore.YELLOW, Fore.LIGHTYELLOW_EX, Fore.LIGHTGREEN_EX, Fore.GREEN, Fore.CYAN, Fore.LIGHTBLUE_EX, Fore.BLUE, Fore.MAGENTA, Fore.LIGHTMAGENTA_EX]
     files = os.listdir(directory)
     mp3_files = [f for f in files if f.endswith('.mp3')]
@@ -195,7 +195,7 @@ def get_artist_from_filename(filename):
 
 def rename_tag_move_incoming_youtube_album(directory, our_json_file):
     global DEBUG_COMMENT_NEWLINES, DEBUG_VIEW_TAG_VALUES_BEFORE_INSERTION
-    log_print(f"\n{Fore.GREEN}{Style.BRIGHT}Processing directory: {directory}{Style.NORMAL}\n\n{Fore.YELLOW}{Style.BRIGHT} ")
+    log_print(f"{Fore.GREEN}{Style.BRIGHT}Processing directory: {directory}{Style.NORMAL}\n\n{Fore.YELLOW}{Style.BRIGHT} ")
     num_mp3s, guessed_orig_artist = preprocess_filenames(directory)                                                          # fix filenames first
     data = load_json_data(our_json_file)                                                                                     # get values
     show_audio_files_in_rainbow(directory)                                                                                   # show files to user
@@ -305,6 +305,7 @@ def rename_with_companion_rename(filename_old, filename_new, directory="."):
 def process_files(directory,artist="",year="",album_name="",publisher="",genre="",description="",url="",orig_artist="",our_new_folder="",num_mp3s=123456):                   #pylint: disable=R0913,R0912,R0915
     global DEBUG_VIEW_TAG_VALUES_BEFORE_INSERTION, DEBUG_FILENAME_SPLITTING, DEBUG_FILE_RENAMING, DEBUG_TAGGING_CRASHES
 
+    our_new_folder=our_new_folder.strip()
     for file in os.listdir(directory):
         if not file.endswith('.mp3'): continue
         log_print(f"\n{Fore.CYAN}{Style.BRIGHT}* Processing file: {file}{Style.NORMAL}")
@@ -403,12 +404,12 @@ def process_files(directory,artist="",year="",album_name="",publisher="",genre="
         if num_mp3s == 1:
             log_print("\n")
             new_name = f"{artist} - {title}"
-            new_name = fix_unicode_filenames.convert_a_filename(new_name,silent=True)
             if DEBUG_FILE_RENAMING: log_print(f"\n{Fore.YELLOW}{Style.BRIGHT}* new_name[a11]= {Fore.CYAN}{Style.NORMAL}{new_name}")
             if orig_artist is not artist:
                 new_name = f"{new_name} (by {orig_artist})"
                 #NO! new_name = strip_artist_from_album_or_filename(new_name,orig_artist)
             new_name = f"{new_name}.mp3"
+            new_name = fix_unicode_filenames.convert_a_filename(new_name,silent=False)
             log_print(f"{Fore.CYAN}{Style.BRIGHT}* Renaming file: {Fore.CYAN}{Style.NORMAL}{file}")
             log_print(f"{Fore.CYAN}{Style.BRIGHT}             To: {Fore.BLUE}{Style.BRIGHT}{new_name}")
             rename_with_companion_rename(file, new_name, directory=directory)
